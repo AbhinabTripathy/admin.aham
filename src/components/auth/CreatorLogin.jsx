@@ -11,7 +11,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import logo from '../../assets/A Astro Logor.png';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -82,9 +82,11 @@ const CreatorLogin = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    username: '',
+    mobileNumber: '',
     password: '',
   });
 
@@ -93,12 +95,22 @@ const CreatorLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(''); // Clear error when user types
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Creator login attempt:', formData);
+    
+    // Check for specific credentials
+    if (formData.mobileNumber === '9988776655' && formData.password === 'Testing12#$') {
+      // Set authentication token
+      localStorage.setItem('creatorAuth', 'true');
+      // Successful login
+      navigate('/creator-dashboard'); // Redirect to creator dashboard
+    } else {
+      // Failed login
+      setError('Invalid mobile number or password');
+    }
   };
 
   return (
@@ -149,16 +161,38 @@ const CreatorLogin = () => {
             Creator Login
           </Typography>
           <FormContainer component="form" onSubmit={handleSubmit}>
+            {error && (
+              <Typography 
+                color="error" 
+                variant="body2" 
+                sx={{ 
+                  mb: 2, 
+                  textAlign: 'center',
+                  backgroundColor: '#ffebee',
+                  padding: '8px',
+                  borderRadius: '4px',
+                }}
+              >
+                {error}
+              </Typography>
+            )}
             <StyledTextField
               required
               fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
+              id="mobileNumber"
+              label="Mobile Number"
+              name="mobileNumber"
+              autoComplete="tel"
               autoFocus
-              value={formData.username}
+              value={formData.mobileNumber}
               onChange={handleChange}
+              type="tel"
+              inputProps={{
+                pattern: "[0-9]*",
+                maxLength: 10,
+              }}
+              placeholder="Enter 10 digit mobile number"
+              error={!!error}
             />
             <StyledTextField
               required
@@ -170,6 +204,7 @@ const CreatorLogin = () => {
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              error={!!error}
             />
             <Button
               type="submit"

@@ -6,6 +6,9 @@ import CreatorLogin from './components/auth/CreatorLogin';
 import CreatorSignup from './components/auth/CreatorSignup';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import './App.css';
+import CreaterDashboard from './components/Creator/CreaterDashboard';
+import CreatorProfile from './components/Creator/CreatorProfile';
+// import CreaterDashboard from './components/Creator/CreaterDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -13,6 +16,17 @@ const ProtectedRoute = ({ children }) => {
   
   if (!isAuthenticated) {
     return <Navigate to="/admin-login" replace />;
+  }
+
+  return children;
+};
+
+// Protected Creator Route Component
+const ProtectedCreatorRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('creatorAuth') === 'true';
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/creator-login" replace />;
   }
 
   return children;
@@ -90,6 +104,88 @@ function App() {
             <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Creator Dashboard Routes */}
+        <Route
+          path="/creator-dashboard"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/create-content/graphic-novel"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/create-content/audio-book"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/graphic-novels"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/audio-books"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/all-content"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/pending"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/rejected"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/profile"
+          element={
+            <ProtectedCreatorRoute>
+              <CreatorProfile />
+            </ProtectedCreatorRoute>
+          }
+        />
+        <Route
+          path="/creator-dashboard/create-content"
+          element={
+            <ProtectedCreatorRoute>
+              <CreaterDashboard />
+            </ProtectedCreatorRoute>
           }
         />
 
