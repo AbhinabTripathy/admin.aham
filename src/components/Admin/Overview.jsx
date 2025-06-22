@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaRegNewspaper, FaUsers, FaFileAlt, FaTimesCircle, FaBook, FaHeadphones, FaShoppingBag } from 'react-icons/fa';
+import { FaRegNewspaper, FaUsers, FaFileAlt, FaTimesCircle, FaBook, FaHeadphones, FaShoppingBag, FaShoppingCart, FaUserPlus } from 'react-icons/fa';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, useTheme, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,10 @@ const Overview = () => {
     rejectedPosts: 25,
     novels: 200,
     audioBooks: 85,
-    mallItems: 320
+    mallItems: 320,
+    products: 450,
+    orders: 180,
+    subscribedUsers: 95
   });
 
   const [showSessionExpiredDialog, setShowSessionExpiredDialog] = useState(false);
@@ -220,7 +223,7 @@ const Overview = () => {
           <div style={cardContentStyle}>
             <h2 style={numberStyle}>{stats.membersAdded}</h2>
             <div style={labelStyle}>Members</div>
-            <div style={sublabelStyle}>Users Added</div>
+            <div style={sublabelStyle}>Creator</div>
           </div>
         </div>
 
@@ -281,6 +284,42 @@ const Overview = () => {
             <h2 style={numberStyle}>{stats.mallItems}</h2>
             <div style={labelStyle}>Items</div>
             <div style={sublabelStyle}>Mall Products</div>
+          </div>
+        </div>
+
+        {/* Products */}
+        <div style={cardStyle}>
+          <div style={iconContainerStyle('rgba(79, 70, 229, 0.1)', '#4f46e5')}>
+            <FaShoppingBag size={isMobile ? 24 : 32} color="#4f46e5" />
+          </div>
+          <div style={cardContentStyle}>
+            <h2 style={numberStyle}>{stats.products}</h2>
+            <div style={labelStyle}>Products</div>
+            <div style={sublabelStyle}>Total Products</div>
+          </div>
+        </div>
+
+        {/* Orders */}
+        <div style={cardStyle}>
+          <div style={iconContainerStyle('rgba(14, 165, 233, 0.1)', '#0ea5e9')}>
+            <FaShoppingCart size={isMobile ? 24 : 32} color="#0ea5e9" />
+          </div>
+          <div style={cardContentStyle}>
+            <h2 style={numberStyle}>{stats.orders}</h2>
+            <div style={labelStyle}>Orders</div>
+            <div style={sublabelStyle}>Total Orders</div>
+          </div>
+        </div>
+
+        {/* Subscribed Users */}
+        <div style={cardStyle}>
+          <div style={iconContainerStyle('rgba(168, 85, 247, 0.1)', '#a855f7')}>
+            <FaUserPlus size={isMobile ? 24 : 32} color="#a855f7" />
+          </div>
+          <div style={cardContentStyle}>
+            <h2 style={numberStyle}>{stats.subscribedUsers}</h2>
+            <div style={labelStyle}>Users</div>
+            <div style={sublabelStyle}>Subscribed Users</div>
           </div>
         </div>
       </div>

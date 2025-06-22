@@ -17,22 +17,26 @@ import {
   CardContent,
   Grid,
   Stack,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import BlockIcon from '@mui/icons-material/Block';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreIcon from '@mui/icons-material/Restore';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
+  padding: theme.spacing(2),
   margin: theme.spacing(2),
   backgroundColor: '#fff',
   borderRadius: '12px',
   boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+  overflow: 'hidden',
   [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(2),
     margin: theme.spacing(1),
-  },
+  }
 }));
 
 const HeaderSection = styled(Box)(({ theme }) => ({
@@ -44,33 +48,29 @@ const HeaderSection = styled(Box)(({ theme }) => ({
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: theme.spacing(1),
-  },
+  }
 }));
 
-const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+const StyledTableContainer = styled(TableContainer)({
   borderRadius: '8px',
-  '& .MuiTableCell-head': {
-    backgroundColor: theme.palette.error.main,
-    color: '#fff',
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
-    padding: theme.spacing(2),
-    [theme.breakpoints.down('md')]: {
-      padding: theme.spacing(1),
-      fontSize: '0.875rem',
-    },
+  overflow: 'auto',
+  '&::-webkit-scrollbar': {
+    display: 'none'
   },
-  '& .MuiTableCell-root': {
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    padding: theme.spacing(2),
-    [theme.breakpoints.down('md')]: {
-      padding: theme.spacing(1),
-      fontSize: '0.875rem',
-    },
-  },
-  '& .MuiTableRow-root:hover': {
-    backgroundColor: theme.palette.action.hover,
-  },
+  scrollbarWidth: 'none',
+  msOverflowStyle: 'none'
+});
+
+const TableHeader = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.error.main,
+  color: '#fff',
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+  padding: theme.spacing(2),
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(1),
+    fontSize: '0.875rem',
+  }
 }));
 
 const CategoryChip = styled(Chip)(({ theme, contentType }) => ({
@@ -84,11 +84,7 @@ const CategoryChip = styled(Chip)(({ theme, contentType }) => ({
     theme.palette.warning.dark,
   '& .MuiChip-icon': {
     color: 'inherit',
-  },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.75rem',
-    height: '24px',
-  },
+  }
 }));
 
 const StatusChip = styled(Chip)(({ theme }) => ({
@@ -98,33 +94,34 @@ const StatusChip = styled(Chip)(({ theme }) => ({
   color: theme.palette.error.dark,
   '& .MuiChip-icon': {
     color: 'inherit',
-  },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.75rem',
-    height: '24px',
-  },
+  }
 }));
 
-const ContentCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
+const ContentCard = styled(Card)({
+  marginBottom: '16px',
   borderRadius: '8px',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-}));
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+});
 
-const LabelTypography = styled(Typography)(({ theme }) => ({
+const Label = styled(Typography)({
   fontWeight: 600,
-  color: theme.palette.text.secondary,
+  color: 'text.secondary',
   fontSize: '0.75rem',
-  marginBottom: theme.spacing(0.5),
-}));
+  marginBottom: '4px'
+});
 
-const ValueTypography = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.primary,
+const Value = styled(Typography)({
+  color: 'text.primary',
   fontSize: '0.875rem',
-  wordBreak: 'break-word',
-}));
+  wordBreak: 'break-word'
+});
 
-// Sample data - replace with actual data from your backend
+const ActionButtons = styled(Box)({
+  display: 'flex',
+  gap: '8px',
+  justifyContent: 'flex-end'
+});
+
 const sampleData = [
   {
     id: 1,
@@ -134,7 +131,8 @@ const sampleData = [
     rejectedBy: 'Admin',
     submittedAt: '2024-03-15 10:30 AM',
     rejectedAt: '2024-03-16 02:45 PM',
-    status: 'Needs Revision'
+    status: 'Needs Revision',
+    reason: 'Content quality needs improvement'
   },
   {
     id: 2,
@@ -144,9 +142,9 @@ const sampleData = [
     rejectedBy: 'Admin',
     submittedAt: '2024-03-14 09:15 AM',
     rejectedAt: '2024-03-15 11:20 AM',
-    status: 'Needs Revision'
-  },
-  // Add more sample data as needed
+    status: 'Needs Revision',
+    reason: 'Audio quality issues'
+  }
 ];
 
 const RejectedContent = () => {
@@ -156,35 +154,33 @@ const RejectedContent = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const getCategoryIcon = (category) => {
-    return category === 'Graphic Novel' ? 
-      <MenuBookIcon fontSize={isMobile ? "small" : "medium"} /> : 
-      <HeadphonesIcon fontSize={isMobile ? "small" : "medium"} />;
-  };
+  const handleDelete = (id) => console.log('Delete content with id:', id);
+  const handleRestore = (id) => console.log('Restore content with id:', id);
+
+  const getCategoryIcon = (category) => (
+    category === 'Graphic Novel' ? 
+      <MenuBookIcon fontSize="small" /> : 
+      <HeadphonesIcon fontSize="small" />
+  );
 
   const MobileCard = ({ row }) => (
     <ContentCard>
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <LabelTypography>Title</LabelTypography>
-            <ValueTypography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {row.title}
-            </ValueTypography>
+            <Label>Title</Label>
+            <Value variant="subtitle1" sx={{ fontWeight: 600 }}>{row.title}</Value>
           </Box>
 
           <Grid container spacing={2}>
             <Grid item xs={6}>
-              <LabelTypography>Category</LabelTypography>
+              <Label>Category</Label>
               <CategoryChip
                 icon={getCategoryIcon(row.category)}
                 label={row.category}
@@ -193,7 +189,7 @@ const RejectedContent = () => {
               />
             </Grid>
             <Grid item xs={6}>
-              <LabelTypography>Status</LabelTypography>
+              <Label>Status</Label>
               <StatusChip
                 icon={<BlockIcon fontSize="small" />}
                 label={row.status}
@@ -203,48 +199,59 @@ const RejectedContent = () => {
           </Grid>
 
           <Box>
-            <LabelTypography>Submitted By</LabelTypography>
-            <ValueTypography>{row.submittedBy}</ValueTypography>
+            <Label>Submitted By</Label>
+            <Value>{row.submittedBy}</Value>
           </Box>
 
           <Box>
-            <LabelTypography>Rejected By</LabelTypography>
-            <ValueTypography>{row.rejectedBy}</ValueTypography>
+            <Label>Rejected By</Label>
+            <Value>{row.rejectedBy}</Value>
+          </Box>
+
+          <Box>
+            <Label>Rejection Reason</Label>
+            <Value>{row.reason}</Value>
           </Box>
 
           <Grid container spacing={2}>
             <Grid item xs={6}>
-              <LabelTypography>Submitted At</LabelTypography>
-              <ValueTypography>{row.submittedAt}</ValueTypography>
+              <Label>Submitted At</Label>
+              <Value>{row.submittedAt}</Value>
             </Grid>
             <Grid item xs={6}>
-              <LabelTypography>Rejected At</LabelTypography>
-              <ValueTypography>{row.rejectedAt}</ValueTypography>
+              <Label>Rejected At</Label>
+              <Value>{row.rejectedAt}</Value>
             </Grid>
           </Grid>
+
+          <ActionButtons>
+            <Tooltip title="Delete Permanently">
+              <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Restore to Pending">
+              <IconButton size="small" color="primary" onClick={() => handleRestore(row.id)}>
+                <RestoreIcon />
+              </IconButton>
+            </Tooltip>
+          </ActionButtons>
         </Stack>
       </CardContent>
     </ContentCard>
   );
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2, md: 3, lg: 4 } }}>
+    <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
       <StyledPaper>
         <HeaderSection>
-          <BlockIcon sx={{ 
-            fontSize: { xs: 32, sm: 36, md: 40 }, 
-            color: 'error.main' 
-          }} />
+          <BlockIcon sx={{ fontSize: { xs: 32, sm: 36, md: 40 }, color: 'error.main' }} />
           <Typography 
             variant={isMobile ? "h5" : "h4"} 
             component="h1" 
             sx={{ 
               fontWeight: 600,
-              fontSize: {
-                xs: '1.5rem',
-                sm: '2rem',
-                md: '2.25rem',
-              }
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' }
             }}
           >
             Rejected Content
@@ -264,17 +271,19 @@ const RejectedContent = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Submitted By</TableCell>
-                  <TableCell>Rejected By</TableCell>
+                  <TableHeader>Title</TableHeader>
+                  <TableHeader>Category</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <TableHeader>Submitted By</TableHeader>
+                  <TableHeader>Rejected By</TableHeader>
+                  <TableHeader>Reason</TableHeader>
                   {!isTablet && (
                     <>
-                      <TableCell>Submitted At</TableCell>
-                      <TableCell>Rejected At</TableCell>
+                      <TableHeader>Submitted At</TableHeader>
+                      <TableHeader>Rejected At</TableHeader>
                     </>
                   )}
+                  <TableHeader align="right">Actions</TableHeader>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -300,12 +309,27 @@ const RejectedContent = () => {
                       </TableCell>
                       <TableCell>{row.submittedBy}</TableCell>
                       <TableCell>{row.rejectedBy}</TableCell>
+                      <TableCell>{row.reason}</TableCell>
                       {!isTablet && (
                         <>
                           <TableCell>{row.submittedAt}</TableCell>
                           <TableCell>{row.rejectedAt}</TableCell>
                         </>
                       )}
+                      <TableCell align="right">
+                        <ActionButtons>
+                          <Tooltip title="Delete Permanently">
+                            <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Restore to Pending">
+                            <IconButton size="small" color="primary" onClick={() => handleRestore(row.id)}>
+                              <RestoreIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </ActionButtons>
+                      </TableCell>
                     </TableRow>
                   ))}
               </TableBody>

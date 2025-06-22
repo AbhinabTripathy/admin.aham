@@ -51,7 +51,7 @@ function App() {
           }
         />
         <Route
-          path="/admin-dashboard/articles"
+          path="/admin-dashboard/graphic-novel"
           element={
             <ProtectedRoute>
               <AdminDashboard />
@@ -59,7 +59,7 @@ function App() {
           }
         />
         <Route
-          path="/admin-dashboard/videos"
+          path="/admin-dashboard/audio-book"
           element={
             <ProtectedRoute>
               <AdminDashboard />
@@ -67,7 +67,15 @@ function App() {
           }
         />
         <Route
-          path="/admin-dashboard/all-content"
+          path="/admin-dashboard/mall"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard/approved"
           element={
             <ProtectedRoute>
               <AdminDashboard />

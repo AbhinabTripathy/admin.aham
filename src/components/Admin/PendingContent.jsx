@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 import {
   Box,
   Paper,
@@ -17,11 +18,13 @@ import {
   CardContent,
   Grid,
   Stack,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import PendingIcon from '@mui/icons-material/Pending';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
-import BlockIcon from '@mui/icons-material/Block';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -50,7 +53,7 @@ const HeaderSection = styled(Box)(({ theme }) => ({
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: '8px',
   '& .MuiTableCell-head': {
-    backgroundColor: theme.palette.error.main,
+    backgroundColor: theme.palette.warning.main,
     color: '#fff',
     fontWeight: 600,
     whiteSpace: 'nowrap',
@@ -73,15 +76,11 @@ const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   },
 }));
 
-const CategoryChip = styled(Chip)(({ theme, contentType }) => ({
+const CategoryChip = styled(Chip)(({ theme }) => ({
   borderRadius: '16px',
   fontWeight: 500,
-  backgroundColor: contentType === 'Graphic Novel' ? 
-    theme.palette.info.light : 
-    theme.palette.warning.light,
-  color: contentType === 'Graphic Novel' ? 
-    theme.palette.info.dark : 
-    theme.palette.warning.dark,
+  backgroundColor: theme.palette.info.light,
+  color: theme.palette.info.dark,
   '& .MuiChip-icon': {
     color: 'inherit',
   },
@@ -94,8 +93,8 @@ const CategoryChip = styled(Chip)(({ theme, contentType }) => ({
 const StatusChip = styled(Chip)(({ theme }) => ({
   borderRadius: '16px',
   fontWeight: 500,
-  backgroundColor: theme.palette.error.light,
-  color: theme.palette.error.dark,
+  backgroundColor: theme.palette.warning.light,
+  color: theme.palette.warning.dark,
   '& .MuiChip-icon': {
     color: 'inherit',
   },
@@ -124,37 +123,54 @@ const ValueTypography = styled(Typography)(({ theme }) => ({
   wordBreak: 'break-word',
 }));
 
-// Sample data - replace with actual data from your backend
-const sampleData = [
-  {
-    id: 1,
-    title: 'The Lost Kingdom',
-    category: 'Graphic Novel',
-    submittedBy: 'John Doe',
-    rejectedBy: 'Admin',
-    submittedAt: '2024-03-15 10:30 AM',
-    rejectedAt: '2024-03-16 02:45 PM',
-    status: 'Needs Revision'
+const ActionButton = styled(IconButton)(({ theme, color }) => ({
+  backgroundColor: color,
+  color: 'white',
+  '&:hover': {
+    backgroundColor: theme.palette.mode === 'light' ? 
+      theme.palette.augmentColor({ color: { main: color } }).dark :
+      theme.palette.augmentColor({ color: { main: color } }).light,
   },
-  {
-    id: 2,
-    title: 'Whispers in the Dark',
-    category: 'Audio Book',
-    submittedBy: 'Jane Wilson',
-    rejectedBy: 'Admin',
-    submittedAt: '2024-03-14 09:15 AM',
-    rejectedAt: '2024-03-15 11:20 AM',
-    status: 'Needs Revision'
-  },
-  // Add more sample data as needed
-];
+  marginRight: theme.spacing(1),
+}));
 
-const RejectedContent = () => {
+const PendingContent = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  // Static data
+  const staticPendingNews = [
+    {
+      id: 1,
+      title: 'The Mystery Chronicles',
+      category: 'Graphic Novel',
+      submittedBy: 'John Doe',
+      submittedAt: '2024-03-15 10:30 AM',
+      status: 'pending'
+    },
+    {
+      id: 2,
+      title: 'Echoes of Time',
+      category: 'Audio Book',
+      submittedBy: 'Jane Wilson',
+      submittedAt: '2024-03-14 09:15 AM',
+      status: 'pending'
+    },
+    {
+      id: 3,
+      title: 'The Hidden Truth',
+      category: 'Graphic Novel',
+      submittedBy: 'Mike Brown',
+      submittedAt: '2024-03-13 14:20 PM',
+      status: 'pending'
+    }
+  ];
+
+  const [pendingNews] = useState(staticPendingNews);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -165,38 +181,43 @@ const RejectedContent = () => {
     setPage(0);
   };
 
+  const handleStatusUpdate = (newsId, status) => {
+    console.log(`${status} clicked for news ID:`, newsId);
+    setSuccessMessage(`Content ${status} successfully`);
+    setTimeout(() => setSuccessMessage(null), 1500);
+  };
+
   const getCategoryIcon = (category) => {
     return category === 'Graphic Novel' ? 
       <MenuBookIcon fontSize={isMobile ? "small" : "medium"} /> : 
       <HeadphonesIcon fontSize={isMobile ? "small" : "medium"} />;
   };
 
-  const MobileCard = ({ row }) => (
+  const MobileCard = ({ news }) => (
     <ContentCard>
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <LabelTypography>Title</LabelTypography>
+            <LabelTypography>Post Title</LabelTypography>
             <ValueTypography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {row.title}
+              {news.title}
             </ValueTypography>
           </Box>
 
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <LabelTypography>Category</LabelTypography>
-              <CategoryChip
-                icon={getCategoryIcon(row.category)}
-                label={row.category}
-                contentType={row.category}
-                size="small"
+              <CategoryChip 
+                icon={getCategoryIcon(news.category)}
+                label={news.category} 
+                size="small" 
               />
             </Grid>
             <Grid item xs={6}>
               <LabelTypography>Status</LabelTypography>
               <StatusChip
-                icon={<BlockIcon fontSize="small" />}
-                label={row.status}
+                icon={<PendingIcon fontSize="small" />}
+                label="Pending"
                 size="small"
               />
             </Grid>
@@ -204,24 +225,33 @@ const RejectedContent = () => {
 
           <Box>
             <LabelTypography>Submitted By</LabelTypography>
-            <ValueTypography>{row.submittedBy}</ValueTypography>
+            <ValueTypography>{news.submittedBy}</ValueTypography>
           </Box>
 
           <Box>
-            <LabelTypography>Rejected By</LabelTypography>
-            <ValueTypography>{row.rejectedBy}</ValueTypography>
+            <LabelTypography>Submitted At</LabelTypography>
+            <ValueTypography>{news.submittedAt}</ValueTypography>
           </Box>
 
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <LabelTypography>Submitted At</LabelTypography>
-              <ValueTypography>{row.submittedAt}</ValueTypography>
-            </Grid>
-            <Grid item xs={6}>
-              <LabelTypography>Rejected At</LabelTypography>
-              <ValueTypography>{row.rejectedAt}</ValueTypography>
-            </Grid>
-          </Grid>
+          <Box>
+            <LabelTypography>Actions</LabelTypography>
+            <Box sx={{ mt: 1 }}>
+              <ActionButton
+                size="small"
+                color="#10b981"
+                onClick={() => handleStatusUpdate(news.id, 'approved')}
+              >
+                <FaCheck />
+              </ActionButton>
+              <ActionButton
+                size="small"
+                color="#ef4444"
+                onClick={() => handleStatusUpdate(news.id, 'rejected')}
+              >
+                <FaTimes />
+              </ActionButton>
+            </Box>
+          </Box>
         </Stack>
       </CardContent>
     </ContentCard>
@@ -231,9 +261,9 @@ const RejectedContent = () => {
     <Box sx={{ p: { xs: 1, sm: 2, md: 3, lg: 4 } }}>
       <StyledPaper>
         <HeaderSection>
-          <BlockIcon sx={{ 
+          <PendingIcon sx={{ 
             fontSize: { xs: 32, sm: 36, md: 40 }, 
-            color: 'error.main' 
+            color: 'warning.main' 
           }} />
           <Typography 
             variant={isMobile ? "h5" : "h4"} 
@@ -247,16 +277,30 @@ const RejectedContent = () => {
               }
             }}
           >
-            Rejected Content
+            Pending Content
           </Typography>
         </HeaderSection>
 
+        {successMessage && (
+          <Box sx={{ 
+            mb: 2, 
+            p: 2, 
+            bgcolor: '#d1fae5', 
+            color: '#047857',
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <span style={{ marginRight: '6px' }}>✓</span> {successMessage}
+          </Box>
+        )}
+
         {isMobile ? (
           <Box sx={{ mt: 2 }}>
-            {sampleData
+            {pendingNews
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => (
-                <MobileCard key={row.id} row={row} />
+              .map((news) => (
+                <MobileCard key={news.id} news={news} />
               ))}
           </Box>
         ) : (
@@ -264,48 +308,50 @@ const RejectedContent = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Title</TableCell>
+                  <TableCell>Post Title</TableCell>
                   <TableCell>Category</TableCell>
-                  <TableCell>Status</TableCell>
                   <TableCell>Submitted By</TableCell>
-                  <TableCell>Rejected By</TableCell>
-                  {!isTablet && (
-                    <>
-                      <TableCell>Submitted At</TableCell>
-                      <TableCell>Rejected At</TableCell>
-                    </>
-                  )}
+                  {!isTablet && <TableCell>Submitted At</TableCell>}
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sampleData
+                {pendingNews
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.title}</TableCell>
+                  .map((news) => (
+                    <TableRow key={news.id}>
+                      <TableCell>{news.title}</TableCell>
                       <TableCell>
-                        <CategoryChip
-                          icon={getCategoryIcon(row.category)}
-                          label={row.category}
-                          contentType={row.category}
-                          size="small"
+                        <CategoryChip 
+                          icon={getCategoryIcon(news.category)}
+                          label={news.category} 
+                          size="small" 
                         />
                       </TableCell>
+                      <TableCell>{news.submittedBy}</TableCell>
+                      {!isTablet && <TableCell>{news.submittedAt}</TableCell>}
                       <TableCell>
-                        <StatusChip
-                          icon={<BlockIcon fontSize="small" />}
-                          label={row.status}
-                          size="small"
-                        />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Tooltip title="Approve">
+                            <ActionButton
+                              size="small"
+                              color="#10b981"
+                              onClick={() => handleStatusUpdate(news.id, 'approved')}
+                            >
+                              <FaCheck />
+                            </ActionButton>
+                          </Tooltip>
+                          <Tooltip title="Reject">
+                            <ActionButton
+                              size="small"
+                              color="#ef4444"
+                              onClick={() => handleStatusUpdate(news.id, 'rejected')}
+                            >
+                              <FaTimes />
+                            </ActionButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
-                      <TableCell>{row.submittedBy}</TableCell>
-                      <TableCell>{row.rejectedBy}</TableCell>
-                      {!isTablet && (
-                        <>
-                          <TableCell>{row.submittedAt}</TableCell>
-                          <TableCell>{row.rejectedAt}</TableCell>
-                        </>
-                      )}
                     </TableRow>
                   ))}
               </TableBody>
@@ -315,7 +361,7 @@ const RejectedContent = () => {
 
         <TablePagination
           component="div"
-          count={sampleData.length}
+          count={pendingNews.length}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
@@ -335,4 +381,4 @@ const RejectedContent = () => {
   );
 };
 
-export default RejectedContent; 
+export default PendingContent;

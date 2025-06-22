@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import ArticleIcon from '@mui/icons-material/Article';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import PendingIcon from '@mui/icons-material/Pending';
@@ -13,6 +13,11 @@ import FolderIcon from '@mui/icons-material/Folder';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import VideoCallIcon from '@mui/icons-material/VideoCall';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import HeadphonesIcon from '@mui/icons-material/Headphones';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Drawer } from '@mui/material';
 
 const SidebarContainer = styled(Box)(({ theme, isCollapsed }) => ({
@@ -171,18 +176,25 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
       </Tooltip>
 
       <Collapse in={contentExpanded} timeout="auto" unmountOnExit>
-        {renderSubMenuItem(<PostAddIcon />, "Standard Post", '/admin-dashboard/standard-post')}
-        {renderSubMenuItem(<VideoCallIcon />, "Video Post", '/admin-dashboard/video-post')}
+        {renderSubMenuItem(<AutoStoriesIcon />, "Graphic Novel", '/admin-dashboard/graphic-novel')}
+        {renderSubMenuItem(<HeadphonesIcon />, "Audio Book", '/admin-dashboard/audio-book')}
+        {renderSubMenuItem(<StorefrontIcon />, "Mall", '/admin-dashboard/mall')}
       </Collapse>
 
       {/* All Content */}
-      {renderMenuItem(<ArticleIcon />, "All Content", '/admin-dashboard/all-content')}
+      {renderMenuItem(<ArticleIcon />, "Approved Content", '/admin-dashboard/approved')}
 
       {/* Pending Approvals */}
-      {renderMenuItem(<PendingIcon />, "Pending Approvals", '/admin-dashboard/pending')}
+      {renderMenuItem(<PendingIcon />, "Pending Content", '/admin-dashboard/pending')}
 
       {/* Rejected Content */}
-      {renderMenuItem(<BlockIcon />, "Rejected", '/admin-dashboard/rejected')}
+      {renderMenuItem(<BlockIcon />, "Rejected Content", '/admin-dashboard/rejected')}
+
+      {/* Products */}
+      {renderMenuItem(<ShoppingBagIcon />, "Products", '/admin-dashboard/products')}
+
+      {/* Orders */}
+      {renderMenuItem(<ShoppingCartIcon />, "Orders", '/admin-dashboard/orders')}
 
       {/* MANAGE USERS Section */}
       <SectionTitle isCollapsed={isCollapsed}>MANAGE USERS</SectionTitle>
@@ -190,8 +202,8 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
       {/* Users List */}
       {renderMenuItem(<PeopleIcon />, "Users", '/admin-dashboard/users')}
 
-      {/* Add Users */}
-      {renderMenuItem(<PersonAddIcon />, "Add Users", '/admin-dashboard/add-users')}
+      {/* Subscribed Users */}
+      {renderMenuItem(<SubscriptionsIcon />, "Subscribed Users", '/admin-dashboard/add-users')}
     </SidebarContainer>
   );
 

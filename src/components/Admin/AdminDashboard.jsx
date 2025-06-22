@@ -5,6 +5,13 @@ import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
 import AdminFooter from './AdminFooter';
 import Overview from './Overview';
+import GraphicNovel from './GraphicNovel';
+import Audiobook from './Audiobook';
+import Mall from './Mall';
+import ApprovedContent from './ApprovedContent';
+import PendingContent from './PendingContent';
+import RejectedContent from './RejectedContent';
+import { useLocation } from 'react-router-dom';
 
 const DashboardContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -123,6 +130,7 @@ const FooterWrapper = styled(Box)(({ theme, isSidebarOpen }) => ({
 
 const AdminDashboard = () => {
   const theme = useTheme();
+  const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
 
@@ -154,6 +162,30 @@ const AdminDashboard = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [theme.breakpoints.values.md]);
 
+  // Render content based on current route
+  const renderContent = () => {
+    const path = location.pathname;
+    
+    switch (path) {
+      case '/admin-dashboard':
+        return <Overview />;
+      case '/admin-dashboard/graphic-novel':
+        return <GraphicNovel />;
+      case '/admin-dashboard/audio-book':
+        return <Audiobook />;
+      case '/admin-dashboard/mall':
+        return <Mall />;
+      case '/admin-dashboard/approved':
+        return <ApprovedContent />;
+      case '/admin-dashboard/pending':
+        return <PendingContent key="pending-content" />;
+      case '/admin-dashboard/rejected':
+        return <RejectedContent />;
+      default:
+        return <Overview />;
+    }
+  };
+
   return (
     <DashboardContainer>
       <HeaderWrapper>
@@ -177,7 +209,7 @@ const AdminDashboard = () => {
           onClick={handleContentClick}
         >
           <Content>
-            <Overview />
+            {renderContent()}
           </Content>
         </ContentWrapper>
       </MainContent>
