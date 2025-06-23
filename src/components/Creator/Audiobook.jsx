@@ -70,6 +70,29 @@ const IconUploadSection = styled(Box)(({ theme }) => ({
   },
 }));
 
+const IconUploadBox = styled(Box)(({ theme }) => ({
+  width: { xs: 60, sm: 80 },
+  height: { xs: 60, sm: 80 },
+  border: '2px dashed',
+  borderColor: theme.palette.primary.main,
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  overflow: 'hidden',
+  '&:hover': {
+    borderColor: theme.palette.primary.dark,
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
+
+const IconPreview = styled('img')({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+});
+
 const EpisodeAccordion = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   border: '1px solid',
@@ -194,12 +217,26 @@ const Audiobook = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [audiobookIcon, setAudiobookIcon] = useState(null);
+  const [audiobookIconPreview, setAudiobookIconPreview] = useState('');
 
   const handleEpisodeToggle = (episodeNumber) => {
     setEpisodes(episodes.map(ep => ({
       ...ep,
       open: ep.number === episodeNumber ? !ep.open : false
     })));
+  };
+
+  const handleAudiobookIconUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setAudiobookIcon(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAudiobookIconPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleIconUpload = (episodeNumber, event) => {
@@ -251,21 +288,17 @@ const Audiobook = () => {
     }
   };
 
-  const handleCancel = () => {
-    // Reset all form data
-    setTitle('');
-    setEpisodes([{ number: 1, open: false }]);
-    setSelectedFiles({});
-    setYoutubeUrls({});
-    setSnackbarMessage('Form has been reset');
-    setSnackbarSeverity('info');
-    setOpenSnackbar(true);
-  };
-
   const handlePostAudiobook = () => {
-    // Validate if title and at least one episode is uploaded
+    // Validate if title, icon and at least one episode is uploaded
     if (!title.trim()) {
       setSnackbarMessage('Please enter a title for the Audiobook');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!audiobookIcon) {
+      setSnackbarMessage('Please upload an icon for the Audiobook');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
       return;
@@ -295,6 +328,19 @@ const Audiobook = () => {
     }, 1500);
   };
 
+  const handleCancel = () => {
+    // Reset all form data
+    setTitle('');
+    setEpisodes([{ number: 1, open: false }]);
+    setSelectedFiles({});
+    setYoutubeUrls({});
+    setAudiobookIcon(null);
+    setAudiobookIconPreview('');
+    setSnackbarMessage('Form has been reset');
+    setSnackbarSeverity('info');
+    setOpenSnackbar(true);
+  };
+
   return (
     <Box sx={{ p: { xs: 1, sm: 2, md: 3, lg: 4 } }}>
       <StyledPaper>
@@ -321,6 +367,25 @@ const Audiobook = () => {
           </TitleSection>
 
           <IconUploadSection>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAudiobookIconUpload}
+              style={{ display: 'none' }}
+              id="audiobook-icon-upload"
+            />
+            <label htmlFor="audiobook-icon-upload">
+              <IconUploadBox>
+                {audiobookIconPreview ? (
+                  <IconPreview src={audiobookIconPreview} alt="Audiobook icon" />
+                ) : (
+                  <CloudUploadIcon sx={{ 
+                    fontSize: { xs: 24, sm: 32 },
+                    color: 'primary.main'
+                  }} />
+                )}
+              </IconUploadBox>
+            </label>
             <TextField
               fullWidth
               label="Audiobook Title"

@@ -195,6 +195,33 @@ const BottomActionButtons = styled(Box)(({ theme }) => ({
   },
 }));
 
+const NovelIconUpload = styled(Box)(({ theme }) => ({
+  width: '80px',
+  height: '80px',
+  border: `2px dashed ${theme.palette.primary.main}`,
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  flexShrink: 0,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '60px',
+    height: '60px',
+  },
+}));
+
+const PreviewImage = styled('img')(({ theme }) => ({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  borderRadius: '6px',
+}));
+
 const GraphicNovel = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -208,6 +235,8 @@ const GraphicNovel = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [novelIcon, setNovelIcon] = useState(null);
+  const [novelIconPreview, setNovelIconPreview] = useState(null);
 
   const handleEpisodeToggle = (episodeNumber) => {
     setEpisodes(episodes.map(ep => ({
@@ -233,6 +262,18 @@ const GraphicNovel = () => {
         ...prev,
         [episodeNumber]: { ...prev[episodeNumber], pdf: file }
       }));
+    }
+  };
+
+  const handleNovelIconUpload = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setNovelIcon(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNovelIconPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -265,6 +306,8 @@ const GraphicNovel = () => {
     setTitle('');
     setEpisodes([{ number: 1, open: false }]);
     setSelectedFiles({});
+    setNovelIcon(null);
+    setNovelIconPreview(null);
     setSnackbarMessage('Form has been reset');
     setSnackbarSeverity('info');
     setOpenSnackbar(true);
@@ -273,6 +316,13 @@ const GraphicNovel = () => {
   const handlePostGraphicNovel = () => {
     if (!title.trim()) {
       setSnackbarMessage('Please enter a title for the Graphic Novel');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!novelIcon) {
+      setSnackbarMessage('Please upload a Graphic Novel cover image');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
       return;
@@ -321,6 +371,27 @@ const GraphicNovel = () => {
           </TitleSection>
 
           <IconUploadSection>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleNovelIconUpload}
+              style={{ display: 'none' }}
+              id="novel-icon-upload"
+            />
+            <label htmlFor="novel-icon-upload">
+              <NovelIconUpload>
+                {novelIconPreview ? (
+                  <PreviewImage src={novelIconPreview} alt="Novel Icon" />
+                ) : (
+                  <AddPhotoAlternateIcon 
+                    sx={{ 
+                      fontSize: { xs: '24px', sm: '32px' },
+                      color: 'primary.main'
+                    }} 
+                  />
+                )}
+              </NovelIconUpload>
+            </label>
             <TextField
               fullWidth
               label="Graphic Novel Title"

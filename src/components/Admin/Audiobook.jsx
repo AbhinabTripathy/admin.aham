@@ -21,6 +21,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import YouTubeIcon from '@mui/icons-material/YouTube';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useNavigate } from 'react-router-dom';
 
 const MAX_EPISODES = 15;
@@ -63,11 +64,37 @@ const IconUploadSection = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),
+  marginBottom: theme.spacing(3),
   [theme.breakpoints.down('sm')]: {
-    width: '100%',
-    flexDirection: 'column',
     gap: theme.spacing(1.5),
   },
+}));
+
+const AudiobookIconUpload = styled(Box)(({ theme }) => ({
+  width: '80px',
+  height: '80px',
+  border: `2px dashed ${theme.palette.primary.main}`,
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  flexShrink: 0,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '60px',
+    height: '60px',
+  },
+}));
+
+const PreviewImage = styled('img')(({ theme }) => ({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  borderRadius: '6px',
 }));
 
 const EpisodeAccordion = styled(Box)(({ theme }) => ({
@@ -188,6 +215,8 @@ const Audiobook = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [title, setTitle] = useState('');
+  const [audiobookIcon, setAudiobookIcon] = useState(null);
+  const [audiobookIconPreview, setAudiobookIconPreview] = useState(null);
   const [episodes, setEpisodes] = useState([{ number: 1, open: false }]);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [youtubeUrls, setYoutubeUrls] = useState({});
@@ -200,6 +229,18 @@ const Audiobook = () => {
       ...ep,
       open: ep.number === episodeNumber ? !ep.open : false
     })));
+  };
+
+  const handleAudiobookIconUpload = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setAudiobookIcon(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAudiobookIconPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleIconUpload = (episodeNumber, event) => {
@@ -256,6 +297,8 @@ const Audiobook = () => {
     setEpisodes([{ number: 1, open: false }]);
     setSelectedFiles({});
     setYoutubeUrls({});
+    setAudiobookIcon(null);
+    setAudiobookIconPreview(null);
     setSnackbarMessage('Form has been reset');
     setSnackbarSeverity('info');
     setOpenSnackbar(true);
@@ -264,6 +307,13 @@ const Audiobook = () => {
   const handlePostAudiobook = () => {
     if (!title.trim()) {
       setSnackbarMessage('Please enter a title for the Audiobook');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!audiobookIcon) {
+      setSnackbarMessage('Please upload an Audiobook cover image');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
       return;
@@ -326,6 +376,27 @@ const Audiobook = () => {
           </TitleSection>
 
           <IconUploadSection>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAudiobookIconUpload}
+              style={{ display: 'none' }}
+              id="audiobook-icon-upload"
+            />
+            <label htmlFor="audiobook-icon-upload">
+              <AudiobookIconUpload>
+                {audiobookIconPreview ? (
+                  <PreviewImage src={audiobookIconPreview} alt="Audiobook Icon" />
+                ) : (
+                  <AddPhotoAlternateIcon 
+                    sx={{ 
+                      fontSize: { xs: '24px', sm: '32px' },
+                      color: 'primary.main'
+                    }} 
+                  />
+                )}
+              </AudiobookIconUpload>
+            </label>
             <TextField
               fullWidth
               label="Audiobook Title"
