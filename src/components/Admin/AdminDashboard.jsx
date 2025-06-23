@@ -11,6 +11,11 @@ import Mall from './Mall';
 import ApprovedContent from './ApprovedContent';
 import PendingContent from './PendingContent';
 import RejectedContent from './RejectedContent';
+import Orders from './Orders';
+import Users from './Users';
+import SubscribedUsers from './SubscribedUsers';
+import PostBanner from './PostBanner';
+import Products from './Products';
 import { useLocation } from 'react-router-dom';
 
 const DashboardContainer = styled(Box)(({ theme }) => ({
@@ -178,9 +183,19 @@ const AdminDashboard = () => {
       case '/admin-dashboard/approved':
         return <ApprovedContent />;
       case '/admin-dashboard/pending':
-        return <PendingContent key="pending-content" />;
+        return <PendingContent />;
       case '/admin-dashboard/rejected':
         return <RejectedContent />;
+      case '/admin-dashboard/products':
+        return <Products />;
+      case '/admin-dashboard/orders':
+        return <Orders />;
+      case '/admin-dashboard/users':
+        return <Users />;
+      case '/admin-dashboard/subscribed-users':
+        return <SubscribedUsers />;
+      case '/admin-dashboard/post-banners':
+        return <PostBanner />;
       default:
         return <Overview />;
     }

@@ -126,6 +126,16 @@ const AdminHeader = ({ onMenuClick }) => {
     setAnchorEl(null);
   };
 
+  const handleLogoClick = () => {
+    navigate('/admin-dashboard');
+    handleMenuClose();
+  };
+
+  const handleProfile = () => {
+    navigate('/admin/profile');
+    handleMenuClose();
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminAuth');
     navigate('/');
@@ -145,7 +155,7 @@ const AdminHeader = ({ onMenuClick }) => {
               <MenuIcon sx={{ fontSize: '1.5rem' }} />
             </IconButton>
           )}
-          <LogoContainer>
+          <LogoContainer onClick={handleLogoClick} sx={{ cursor: 'pointer' }}>
             <img src={logo} alt="Aham Logo" />
             <Typography
               variant={isMobile ? 'subtitle2' : isTablet ? 'subtitle1' : 'h6'}
@@ -203,7 +213,7 @@ const AdminHeader = ({ onMenuClick }) => {
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
             <StyledMenuItem
-              onClick={handleMenuClose}
+              onClick={handleProfile}
               sx={{
                 '&:hover': { background: 'rgba(42, 82, 152, 0.1)' },
               }}

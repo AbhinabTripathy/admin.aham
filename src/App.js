@@ -5,6 +5,8 @@ import AdminLogin from './components/auth/AdminLogin';
 import CreatorLogin from './components/auth/CreatorLogin';
 import CreatorSignup from './components/auth/CreatorSignup';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import PostBanner from './components/Admin/PostBanner';
+import Profile from './components/Admin/Profile';
 import './App.css';
 import CreaterDashboard from './components/Creator/CreaterDashboard';
 import CreatorProfile from './components/Creator/CreatorProfile';
@@ -47,6 +49,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />
@@ -99,6 +109,22 @@ function App() {
           }
         />
         <Route
+          path="/admin-dashboard/products"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard/orders"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin-dashboard/users"
           element={
             <ProtectedRoute>
@@ -107,7 +133,15 @@ function App() {
           }
         />
         <Route
-          path="/admin-dashboard/add-users"
+          path="/admin-dashboard/subscribed-users"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard/post-banners"
           element={
             <ProtectedRoute>
               <AdminDashboard />

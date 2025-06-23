@@ -21,39 +21,30 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Drawer } from '@mui/material';
 
 const SidebarContainer = styled(Box)(({ theme, isCollapsed }) => ({
-  padding: '20px 0',
+  padding: '16px 0',
   height: '100%',
   backgroundColor: '#1e3c72',
   color: '#fff',
-  overflowY: 'auto',
+  overflowY: 'hidden',
   width: isCollapsed ? '60px' : '240px',
   transition: 'width 0.3s ease',
-  marginTop: '48px', // Match mobile header height
+  marginTop: '48px',
   [theme.breakpoints.between('sm', 'md')]: {
-    marginTop: '52px', // Match tablet header height
+    marginTop: '52px',
   },
   [theme.breakpoints.up('md')]: {
-    marginTop: '56px', // Match desktop header height
+    marginTop: '56px',
   },
-  '&::-webkit-scrollbar': {
-    width: '8px'
-  },
-  '&::-webkit-scrollbar-track': {
-    background: '#1e3c72'
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: '#2a5298',
-    borderRadius: '4px'
-  },
-  '&::-webkit-scrollbar-thumb:hover': {
-    background: '#3a62a8'
+  '& > *': {
+    transform: 'scale(0.95)',
+    transformOrigin: 'top center'
   }
 }));
 
 const MenuItem = styled(Box)(({ theme, active, isCollapsed }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: isCollapsed ? '12px' : '12px 20px',
+  padding: isCollapsed ? '10px' : '10px 18px',
   cursor: 'pointer',
   backgroundColor: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
   transition: 'all 0.3s ease',
@@ -64,25 +55,28 @@ const MenuItem = styled(Box)(({ theme, active, isCollapsed }) => ({
 }));
 
 const SectionTitle = styled(Box)(({ theme, isCollapsed }) => ({
-  padding: isCollapsed ? '20px 0 10px' : '20px 20px 10px 20px',
+  padding: isCollapsed ? '14px 0 8px' : '14px 18px 8px 18px',
   color: 'rgba(255, 255, 255, 0.7)',
-  fontSize: '14px',
+  fontSize: '13px',
   fontWeight: 'bold',
   textAlign: isCollapsed ? 'center' : 'left',
   display: isCollapsed ? 'none' : 'block'
 }));
 
 const IconWrapper = styled(Box)(({ theme, isCollapsed }) => ({
-  marginRight: isCollapsed ? 0 : '12px',
+  marginRight: isCollapsed ? 0 : '14px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  minWidth: '24px'
+  minWidth: '26px',
+  '& > svg': {
+    fontSize: '1.3rem'
+  }
 }));
 
 const MenuText = styled(Box)(({ theme, isCollapsed }) => ({
   fontWeight: 500,
-  fontSize: '0.95rem',
+  fontSize: '0.975rem',
   display: isCollapsed ? 'none' : 'block',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -92,7 +86,7 @@ const MenuText = styled(Box)(({ theme, isCollapsed }) => ({
 const SubMenuItem = styled(Box)(({ theme, active, isCollapsed }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: isCollapsed ? '10px 0' : '10px 20px 10px 58px',
+  padding: isCollapsed ? '8px 0' : '8px 18px 8px 54px',
   cursor: 'pointer',
   backgroundColor: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
   transition: 'all 0.3s ease',
@@ -161,14 +155,6 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
       <Tooltip title={isCollapsed ? "Content" : ''} placement="right">
         <MenuItem onClick={toggleContent} isCollapsed={isCollapsed}>
           <IconWrapper isCollapsed={isCollapsed}>
-            <KeyboardArrowRightIcon 
-              sx={{ 
-                transform: contentExpanded ? 'rotate(90deg)' : 'none',
-                transition: 'transform 0.2s'
-              }}
-            />
-          </IconWrapper>
-          <IconWrapper isCollapsed={isCollapsed}>
             <FolderIcon />
           </IconWrapper>
           <MenuText isCollapsed={isCollapsed}>Content</MenuText>
@@ -203,7 +189,14 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
       {renderMenuItem(<PeopleIcon />, "Users", '/admin-dashboard/users')}
 
       {/* Subscribed Users */}
-      {renderMenuItem(<SubscriptionsIcon />, "Subscribed Users", '/admin-dashboard/add-users')}
+      {renderMenuItem(<SubscriptionsIcon />, "Subscribed Users", '/admin-dashboard/subscribed-users')}
+
+      {/* Banner Section */}
+      <SectionTitle isCollapsed={isCollapsed}>BANNER MANAGEMENT</SectionTitle>
+
+      {/* Post Banners */}
+      {renderMenuItem(<PostAddIcon />, "Post Banners", '/admin-dashboard/post-banners')}
+
     </SidebarContainer>
   );
 
@@ -225,6 +218,9 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
             marginTop: 0,
             height: '100%',
           },
+          '& svg': {
+            fontSize: '1.3rem'
+          }
         },
       }}
     >

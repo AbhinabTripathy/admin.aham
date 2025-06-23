@@ -12,6 +12,10 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
+  Chip,
+  FormControl,
+  FormLabel,
+  FormHelperText,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 const MAX_IMAGES = 5;
 const MAX_QUANTITY = 10;
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -215,6 +220,28 @@ const ActionButtons = styled(Box)(({ theme }) => ({
   },
 }));
 
+const SizeSelection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.spacing(1),
+  marginTop: theme.spacing(1),
+}));
+
+const SizeChip = styled(Chip)(({ theme, selected }) => ({
+  borderRadius: '16px',
+  backgroundColor: selected ? '#1e3c72' : 'transparent',
+  color: selected ? '#fff' : theme.palette.text.primary,
+  border: `1px solid ${selected ? '#1e3c72' : theme.palette.divider}`,
+  '&:hover': {
+    backgroundColor: selected ? '#15294f' : theme.palette.action.hover,
+  },
+  transition: 'all 0.2s ease',
+  [theme.breakpoints.down('sm')]: {
+    height: '28px',
+    fontSize: '0.75rem',
+  },
+}));
+
 const Mall = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -223,6 +250,7 @@ const Mall = () => {
   const [productPrice, setProductPrice] = useState('');
   const [productDetails, setProductDetails] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [selectedSizes, setSelectedSizes] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -256,6 +284,14 @@ const Mall = () => {
     }
   };
 
+  const handleSizeToggle = (size) => {
+    setSelectedSizes(prev => 
+      prev.includes(size)
+        ? prev.filter(s => s !== size)
+        : [...prev, size]
+    );
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -287,6 +323,7 @@ const Mall = () => {
     setProductPrice('');
     setProductDetails('');
     setQuantity(1);
+    setSelectedSizes([]);
     setErrors({});
     setSnackbarMessage('Form has been reset');
     setSnackbarSeverity('info');
@@ -440,6 +477,43 @@ const Mall = () => {
             helperText={errors.price}
             size={isMobile ? "small" : "medium"}
           />
+
+          <FormControl component="fieldset">
+            <FormLabel 
+              component="legend"
+              sx={{ 
+                mb: 1,
+                fontSize: {
+                  xs: '0.875rem',
+                  sm: '1rem',
+                },
+                color: 'text.primary',
+                '&.Mui-focused': {
+                  color: 'text.primary',
+                },
+              }}
+            >
+              Available Sizes (Optional)
+            </FormLabel>
+            <SizeSelection>
+              {AVAILABLE_SIZES.map((size) => (
+                <SizeChip
+                  key={size}
+                  label={size}
+                  onClick={() => handleSizeToggle(size)}
+                  selected={selectedSizes.includes(size)}
+                  sx={{ 
+                    cursor: 'pointer',
+                  }}
+                />
+              ))}
+            </SizeSelection>
+            <FormHelperText sx={{ mt: 1 }}>
+              {selectedSizes.length > 0 
+                ? `Selected sizes: ${selectedSizes.join(', ')}` 
+                : 'Click to select multiple sizes'}
+            </FormHelperText>
+          </FormControl>
 
           <TextField
             fullWidth
