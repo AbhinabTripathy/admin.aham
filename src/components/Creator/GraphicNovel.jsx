@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   TextField,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  // Dialog,
+  // DialogTitle,
+  // DialogContent,
+  // DialogActions,
   Button,
   Paper,
-  Grid,
+  // Grid,
   useTheme,
   useMediaQuery,
   Collapse,
@@ -28,6 +28,11 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import SendIcon from '@mui/icons-material/Send';
+import { motion } from 'framer-motion';
 
 const MAX_EPISODES = 15;
 
@@ -222,6 +227,22 @@ const PreviewImage = styled('img')(({ theme }) => ({
   borderRadius: '6px',
 }));
 
+const AnimatedButton = styled(motion.div)(({ theme }) => ({
+  display: 'inline-flex',
+  '& .MuiButton-root': {
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 600,
+    gap: theme.spacing(1),
+    padding: theme.spacing(1.5, 2.5),
+    minWidth: 'auto',
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+      padding: theme.spacing(1, 2),
+    },
+  },
+}));
+
 const GraphicNovel = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -237,6 +258,10 @@ const GraphicNovel = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [novelIcon, setNovelIcon] = useState(null);
   const [novelIconPreview, setNovelIconPreview] = useState(null);
+  const [novelCreated, setNovelCreated] = useState(false);
+  const [novelId, setNovelId] = useState(null);
+  const [novelData, setNovelData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleEpisodeToggle = (episodeNumber) => {
     setEpisodes(episodes.map(ep => ({
@@ -267,31 +292,70 @@ const GraphicNovel = () => {
 
   const handleNovelIconUpload = (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    
+    if (!file) {
+      toast.error('No file selected');
+      return;
+    }
+
+    if (file.type.startsWith('image/')) {
       setNovelIcon(file);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setNovelIconPreview(reader.result);
       };
       reader.readAsDataURL(file);
+      
+      toast.success(`Image uploaded: ${file.name}`);
+    } else {
+      toast.error('Please select a valid image file for the thumbnail');
     }
   };
 
-  const handleCreate = (episodeNumber) => {
+  const handleCreate = async (episodeNumber) => {
     const files = selectedFiles[episodeNumber];
-    if (files?.icon && files?.pdf) {
-      setEpisodes(episodes.map(ep => ({
-        ...ep,
-        open: false,
-        uploaded: ep.number === episodeNumber ? true : ep.uploaded
-      })));
-      setSnackbarMessage(`Episode ${episodeNumber} Uploaded Successfully`);
-      setSnackbarSeverity('success');
-      setOpenSnackbar(true);
-    } else {
-      setSnackbarMessage('Please upload both icon and PDF files');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+    if (!files?.icon || !files?.pdf) {
+      toast.error('Please upload both icon and PDF files');
+      return;
+    }
+    if (!novelId) {
+      toast.error('Novel ID not found. Please create the novel first.');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('creatorToken');
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+      const finalToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      const formData = new FormData();
+      formData.append('icon', files.icon);
+      formData.append('pdf', files.pdf);
+      const response = await axios.post(
+        `https://api.ahamcore.com/api/graphic-novels/${novelId}/episodes`,
+        formData,
+        {
+          headers: {
+            'Authorization': finalToken,
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json'
+          }
+        }
+      );
+      if (response.status === 200 || response.status === 201) {
+        setEpisodes(episodes.map(ep => ({
+          ...ep,
+          open: false,
+          uploaded: ep.number === episodeNumber ? true : ep.uploaded
+        })));
+        toast.success(`Episode ${episodeNumber} uploaded successfully`);
+      } else {
+        throw new Error(response.data?.message || 'Failed to upload episode');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload episode. Please try again.');
     }
   };
 
@@ -313,36 +377,119 @@ const GraphicNovel = () => {
     setOpenSnackbar(true);
   };
 
-  const handlePostGraphicNovel = () => {
+  const handlePostGraphicNovel = async () => {
     if (!title.trim()) {
-      setSnackbarMessage('Please enter a title for the Graphic Novel');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+      toast.error('Please enter a title for the Graphic Novel');
       return;
     }
 
     if (!novelIcon) {
-      setSnackbarMessage('Please upload a Graphic Novel cover image');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+      toast.error('Please upload a Graphic Novel cover image');
       return;
     }
 
-    const hasUploadedEpisodes = episodes.some(ep => selectedFiles[ep.number]?.pdf && selectedFiles[ep.number]?.icon);
-    if (!hasUploadedEpisodes) {
-      setSnackbarMessage('Please upload at least one episode');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
-      return;
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('creatorToken');
+      if (!token) {
+        toast.error('Authentication token not found. Please login again.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('thumbnail', novelIcon);
+
+      const finalToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+      const response = await axios.post(
+        'https://api.ahamcore.com/api/graphic-novels',
+        formData,
+        {
+          headers: {
+            'Authorization': finalToken,
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json'
+          },
+          validateStatus: function (status) {
+            return status < 500;
+          }
+        }
+      );
+
+      if (response.status === 401) {
+        toast.error('Authentication failed: Your session has expired. Please login again.');
+        setTimeout(() => {
+          window.location.href = '/creator-login';
+        }, 2000);
+        return;
+      }
+
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const createdNovelId = response.data?.data?.graphicNovel?.id || 
+                            response.data?.graphicNovel?.id || 
+                            response.data?.id;
+      
+      if (createdNovelId) {
+        setNovelId(createdNovelId);
+        setNovelCreated(true);
+        toast.success('Graphic Novel Created Successfully!');
+        
+        await fetchNovelData(createdNovelId);
+      } else {
+        console.error('No novel ID found in response:', response.data);
+        throw new Error('No novel ID received from server');
+      }
+
+    } catch (error) {
+      let errorMessage;
+      if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please login again.';
+        setTimeout(() => {
+          window.location.href = '/creator-login';
+        }, 2000);
+      } else {
+        errorMessage = error.response?.data?.message || 'Failed to create graphic novel. Please try again.';
+      }
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setSnackbarMessage('Graphic Novel Created Successfully');
-    setSnackbarSeverity('success');
-    setOpenSnackbar(true);
+  const fetchNovelData = async (id) => {
+    try {
+      const token = localStorage.getItem('creatorToken');
+      if (!token) {
+        return;
+      }
 
-    setTimeout(() => {
-      navigate('/creator-dashboard/pending');
-    }, 1500);
+      const finalToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+      const response = await axios.get(
+        `https://api.ahamcore.com/api/graphic-novels/${id}`,
+        {
+          headers: {
+            'Authorization': finalToken,
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      const novelData = response.data?.data?.graphicNovel || 
+                       response.data?.graphicNovel || 
+                       response.data;
+
+      setNovelData(novelData);
+
+    } catch (error) {
+      // Don't show error toast for fetch failure, just log it
+      // The content section will still show even if fetch fails
+    }
   };
 
   return (
@@ -371,159 +518,235 @@ const GraphicNovel = () => {
           </TitleSection>
 
           <IconUploadSection>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleNovelIconUpload}
-              style={{ display: 'none' }}
-              id="novel-icon-upload"
-            />
-            <label htmlFor="novel-icon-upload">
-              <NovelIconUpload>
-                {novelIconPreview ? (
-                  <PreviewImage src={novelIconPreview} alt="Novel Icon" />
-                ) : (
-                  <AddPhotoAlternateIcon 
-                    sx={{ 
-                      fontSize: { xs: '24px', sm: '32px' },
-                      color: 'primary.main'
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              width: '100%',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center'
+            }}>
+              <TextField
+                label="Graphic Novel Title"
+                variant="outlined"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                sx={{
+                  flex: '10 1 0%',
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                  },
+                }}
+              />
+              
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleNovelIconUpload}
+                style={{ display: 'none' }}
+                id="novel-icon-upload"
+              />
+              <label htmlFor="novel-icon-upload">
+                <AnimatedButton
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    component="span"
+                    startIcon={novelIcon ? <CheckCircleIcon /> : <AddPhotoAlternateIcon />}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const fileInput = document.getElementById('novel-icon-upload');
+                      if (fileInput) {
+                        fileInput.click();
+                      } else {
+                        toast.error('Upload functionality not available');
+                      }
+                    }}
+                    sx={{
+                      width: { xs: '100%', sm: '110px' },
+                      minWidth: 0,
+                      maxWidth: '110px',
+                      fontSize: { xs: '0.80rem', sm: '0.85rem' },
+                      height: '40px',
+                      whiteSpace: 'nowrap',
+                      padding: 0,
+                      backgroundColor: novelIcon ? 'success.light' : 'transparent',
+                      color: novelIcon ? 'success.contrastText' : 'primary.main',
+                      '&:hover': {
+                        backgroundColor: novelIcon ? 'success.main' : 'primary.light',
+                      }
+                    }}
+                  >
+                    {novelIcon ? 'Uploaded' : 'Upload'}
+                  </Button>
+                </AnimatedButton>
+              </label>
+
+              {/* Show preview of uploaded image */}
+              {novelIconPreview && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  ml: 1
+                }}>
+                  <img 
+                    src={novelIconPreview} 
+                    alt="Preview" 
+                    style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      objectFit: 'cover', 
+                      borderRadius: '4px',
+                      border: '1px solid #ddd'
                     }} 
                   />
-                )}
-              </NovelIconUpload>
-            </label>
-            <TextField
-              fullWidth
-              label="Graphic Novel Title"
-              variant="outlined"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              sx={{
-                '& .MuiInputBase-input': {
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
-                },
-              }}
-            />
+                  <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 500 }}>
+                    {novelIcon?.name}
+                  </Typography>
+                </Box>
+              )}
+
+              <AnimatedButton
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handlePostGraphicNovel}
+                  disabled={loading}
+                  startIcon={loading ? null : <SendIcon />}
+                  sx={{
+                    minWidth: { xs: '100%', sm: '160px' },
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    height: '100%',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {loading ? 'Creating...' : 'Create Novel Page'}
+                </Button>
+              </AnimatedButton>
+            </Box>
           </IconUploadSection>
         </HeaderSection>
 
-        <Typography 
-          variant={isMobile ? "subtitle1" : "h6"} 
-          sx={{ 
-            mb: { xs: 1.5, sm: 2 },
-            fontWeight: 600
-          }}
-        >
-          Content
-        </Typography>
-
-        <Stack spacing={isMobile ? 1.5 : 2}>
-          {episodes.map((episode) => (
-            <EpisodeAccordion key={episode.number}>
-              <EpisodeHeader onClick={() => handleEpisodeToggle(episode.number)}>
-                <Typography 
-                  variant={isMobile ? "body1" : "subtitle1"} 
-                  sx={{ fontWeight: 500 }}
-                >
-                  Episode {episode.number}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {episode.uploaded && (
-                    <CheckCircleIcon 
-                      color="success" 
-                      sx={{ fontSize: isMobile ? 20 : 24 }}
-                    />
-                  )}
-                  {episode.open ? (
-                    <KeyboardArrowUpIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
-                  ) : (
-                    <KeyboardArrowDownIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
-                  )}
-                </Box>
-              </EpisodeHeader>
-
-              <Collapse in={episode.open}>
-                <EpisodeContent>
-                  <UploadButtonGroup>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleIconUpload(episode.number, e)}
-                      style={{ display: 'none' }}
-                      id={`icon-upload-${episode.number}`}
-                    />
-                    <label htmlFor={`icon-upload-${episode.number}`} style={{ flex: 1 }}>
-                      <UploadButton component="span">
-                        <CloudUploadIcon sx={{ fontSize: { xs: 32, sm: 40 } }} />
-                        <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                          {selectedFiles[episode.number]?.icon?.name || 'Upload Episode Icon'}
-                        </Typography>
-                      </UploadButton>
-                    </label>
-
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={(e) => handlePdfUpload(episode.number, e)}
-                      style={{ display: 'none' }}
-                      id={`pdf-upload-${episode.number}`}
-                    />
-                    <label htmlFor={`pdf-upload-${episode.number}`} style={{ flex: 1 }}>
-                      <UploadButton component="span">
-                        <CloudUploadIcon sx={{ fontSize: { xs: 32, sm: 40 } }} />
-                        <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                          {selectedFiles[episode.number]?.pdf?.name || 'Upload PDF'}
-                        </Typography>
-                      </UploadButton>
-                    </label>
-                  </UploadButtonGroup>
-
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
-                    gap: 2,
-                    flexDirection: { xs: 'column', sm: 'row' }
-                  }}>
-                    <ActionButton
-                      variant="outlined"
-                      onClick={() => handleEpisodeToggle(episode.number)}
-                      fullWidth={isMobile}
-                    >
-                      Cancel
-                    </ActionButton>
-                    <ActionButton
-                      variant="contained"
-                      onClick={() => handleCreate(episode.number)}
-                      fullWidth={isMobile}
-                    >
-                      Create
-                    </ActionButton>
-                  </Box>
-                </EpisodeContent>
-              </Collapse>
-            </EpisodeAccordion>
-          ))}
-        </Stack>
-
-        {episodes.length < MAX_EPISODES && (
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            mt: { xs: 1.5, sm: 2 }
-          }}>
-            <IconButton
-              onClick={handleAddEpisode}
-              sx={{
-                color: 'primary.main',
-                '&:hover': { color: 'primary.dark' },
-                '& .MuiSvgIcon-root': {
-                  fontSize: { xs: 32, sm: 40 }
-                }
+        {novelCreated && (
+          <>
+            <Typography 
+              variant={isMobile ? "subtitle1" : "h6"} 
+              sx={{ 
+                mb: { xs: 1.5, sm: 2 },
+                fontWeight: 600
               }}
             >
-              <AddCircleIcon />
-            </IconButton>
-          </Box>
+              Content
+            </Typography>
+
+            <Stack spacing={isMobile ? 1.5 : 2}>
+              {episodes.map((episode) => (
+                <EpisodeAccordion key={episode.number}>
+                  <EpisodeHeader onClick={() => handleEpisodeToggle(episode.number)}>
+                    <Typography 
+                      variant={isMobile ? "body1" : "subtitle1"} 
+                      sx={{ fontWeight: 500 }}
+                    >
+                      Episode {episode.number}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {episode.uploaded && (
+                        <CheckCircleIcon 
+                          color="success" 
+                          sx={{ fontSize: isMobile ? 20 : 24 }}
+                        />
+                      )}
+                      {episode.open ? (
+                        <KeyboardArrowUpIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                      ) : (
+                        <KeyboardArrowDownIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                      )}
+                    </Box>
+                  </EpisodeHeader>
+
+                  <Collapse in={episode.open}>
+                    <EpisodeContent>
+                      <UploadButtonGroup>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleIconUpload(episode.number, e)}
+                          style={{ display: 'none' }}
+                          id={`icon-upload-${episode.number}`}
+                        />
+                        <label htmlFor={`icon-upload-${episode.number}`} style={{ flex: 1 }}>
+                          <UploadButton component="span">
+                            <CloudUploadIcon sx={{ fontSize: { xs: 32, sm: 40 } }} />
+                            <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                              {selectedFiles[episode.number]?.icon?.name || 'Upload Episode Icon'}
+                            </Typography>
+                          </UploadButton>
+                        </label>
+
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => handlePdfUpload(episode.number, e)}
+                          style={{ display: 'none' }}
+                          id={`pdf-upload-${episode.number}`}
+                        />
+                        <label htmlFor={`pdf-upload-${episode.number}`} style={{ flex: 1 }}>
+                          <UploadButton component="span">
+                            <CloudUploadIcon sx={{ fontSize: { xs: 32, sm: 40 } }} />
+                            <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                              {selectedFiles[episode.number]?.pdf?.name || 'Upload PDF'}
+                            </Typography>
+                          </UploadButton>
+                        </label>
+                      </UploadButtonGroup>
+
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-end', 
+                        gap: 2,
+                        flexDirection: { xs: 'column', sm: 'row' }
+                      }}>
+                        <ActionButton
+                          variant="contained"
+                          onClick={() => handleCreate(episode.number)}
+                          fullWidth={isMobile}
+                        >
+                          Create
+                        </ActionButton>
+                      </Box>
+                    </EpisodeContent>
+                  </Collapse>
+                </EpisodeAccordion>
+              ))}
+            </Stack>
+
+            {episodes.length < MAX_EPISODES && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                mt: { xs: 1.5, sm: 2 }
+              }}>
+                <IconButton
+                  onClick={handleAddEpisode}
+                  sx={{
+                    color: 'primary.main',
+                    '&:hover': { color: 'primary.dark' },
+                    '& .MuiSvgIcon-root': {
+                      fontSize: { xs: 32, sm: 40 }
+                    }
+                  }}
+                >
+                  <AddCircleIcon />
+                </IconButton>
+              </Box>
+            )}
+          </>
         )}
 
         <BottomActionButtons>
@@ -539,19 +762,6 @@ const GraphicNovel = () => {
             }}
           >
             Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handlePostGraphicNovel}
-            fullWidth={isMobile}
-            sx={{
-              py: { xs: 1, sm: 1.5 },
-              px: { xs: 2, sm: 4 },
-              fontSize: { xs: '0.875rem', sm: '1rem' }
-            }}
-          >
-            Post Graphic Novel
           </Button>
         </BottomActionButtons>
       </StyledPaper>
@@ -576,6 +786,19 @@ const GraphicNovel = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </Box>
   );
 };

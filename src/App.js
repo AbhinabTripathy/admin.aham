@@ -10,7 +10,6 @@ import Profile from './components/Admin/Profile';
 import './App.css';
 import CreaterDashboard from './components/Creator/CreaterDashboard';
 import CreatorProfile from './components/Creator/CreatorProfile';
-// import CreaterDashboard from './components/Creator/CreaterDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -26,8 +25,15 @@ const ProtectedRoute = ({ children }) => {
 // Protected Creator Route Component
 const ProtectedCreatorRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('creatorAuth') === 'true';
+  const token = localStorage.getItem('creatorToken');
   
-  if (!isAuthenticated) {
+  console.log('Creator Route Protection:', {
+    isAuthenticated,
+    hasToken: !!token
+  });
+  
+  if (!isAuthenticated || !token) {
+    console.log('Redirecting to creator login - not authenticated');
     return <Navigate to="/creator-login" replace />;
   }
 
@@ -38,17 +44,26 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/creator-login" element={<CreatorLogin />} />
-        <Route path="/signup" element={<CreatorSignup />} />
+        <Route path="/creator-signup" element={<CreatorSignup />} />
         
-        {/* Protected Admin Dashboard Routes */}
+        {/* Protected Admin Routes */}
         <Route
-          path="/admin-dashboard"
+          path="/admin-dashboard/*"
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/post-banner"
+          element={
+            <ProtectedRoute>
+              <PostBanner />
             </ProtectedRoute>
           }
         />
@@ -60,98 +75,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin-dashboard/graphic-novel"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/audio-book"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/mall"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/approved"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/pending"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/rejected"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/products"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/orders"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/users"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/subscribed-users"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard/post-banners"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
 
-        {/* Protected Creator Dashboard Routes */}
+        {/* Protected Creator Routes */}
         <Route
-          path="/creator-dashboard"
+          path="/creator-dashboard/*"
           element={
             <ProtectedCreatorRoute>
               <CreaterDashboard />
@@ -159,78 +86,15 @@ function App() {
           }
         />
         <Route
-          path="/creator-dashboard/create-content/graphic-novel"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/create-content/audio-book"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/graphic-novels"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/audio-books"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/all-content"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/pending"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/rejected"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
-        <Route
-          path="/creator-dashboard/profile"
+          path="/creator/profile"
           element={
             <ProtectedCreatorRoute>
               <CreatorProfile />
             </ProtectedCreatorRoute>
           }
         />
-        <Route
-          path="/creator-dashboard/create-content"
-          element={
-            <ProtectedCreatorRoute>
-              <CreaterDashboard />
-            </ProtectedCreatorRoute>
-          }
-        />
 
+        {/* Catch all route - redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

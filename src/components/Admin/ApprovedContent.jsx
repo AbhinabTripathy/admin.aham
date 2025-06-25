@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -22,6 +22,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -31,6 +32,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import axios from 'axios';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -122,40 +124,6 @@ const TrendingChip = styled(Chip)(({ theme }) => ({
   color: theme.palette.primary.main
 }));
 
-// Sample data
-const sampleData = [
-  {
-    id: 1,
-    title: 'The Adventure Begins',
-    category: 'Graphic Novel',
-    submittedBy: 'John Doe',
-    approvedBy: 'Admin',
-    submittedAt: '2024-03-15 10:30 AM',
-    approvedAt: '2024-03-16 02:45 PM',
-    isTrending: false,
-  },
-  {
-    id: 2,
-    title: 'Tales of Mystery',
-    category: 'Audio Book',
-    submittedBy: 'Jane Wilson',
-    approvedBy: 'Admin',
-    submittedAt: '2024-03-14 09:15 AM',
-    approvedAt: '2024-03-15 11:20 AM',
-    isTrending: true,
-  },
-  {
-    id: 3,
-    title: 'The Hidden Truth',
-    category: 'Graphic Novel',
-    submittedBy: 'Mike Brown',
-    approvedBy: 'Admin',
-    submittedAt: '2024-03-13 14:20 PM',
-    approvedAt: '2024-03-14 10:30 AM',
-    isTrending: false,
-  },
-];
-
 const ApprovedContent = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -164,6 +132,129 @@ const ApprovedContent = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [approvedContent, setApprovedContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchApprovedContent = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+          setError('No authentication token found');
+          setLoading(false);
+          return;
+        }
+
+        const config = {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        };
+
+        console.log('Fetching approved content from APIs...');
+
+        // Fetch graphic novels
+        const graphicNovelsResponse = await axios.get('https://api.ahamcore.com/api/admin/graphic-novels', config);
+        console.log('Graphic novels response:', graphicNovelsResponse.data);
+
+        // Fetch audiobooks
+        const audiobooksResponse = await axios.get('https://api.ahamcore.com/api/admin/audiobooks', config);
+        console.log('Audiobooks response:', audiobooksResponse.data);
+
+        // Transform and combine data - handle both array and object responses
+        const graphicNovelsData = graphicNovelsResponse.data.data;
+        const audiobooksData = audiobooksResponse.data.data;
+        
+        console.log('Graphic novels data:', graphicNovelsData);
+        console.log('Graphic novels data type:', typeof graphicNovelsData);
+        console.log('Graphic novels data keys:', graphicNovelsData ? Object.keys(graphicNovelsData) : 'null/undefined');
+        
+        console.log('Audiobooks data:', audiobooksData);
+        console.log('Audiobooks data type:', typeof audiobooksData);
+        console.log('Audiobooks data keys:', audiobooksData ? Object.keys(audiobooksData) : 'null/undefined');
+
+        // Check if data is an array or object with array property
+        const graphicNovelsArray = Array.isArray(graphicNovelsData) ? graphicNovelsData : 
+                                  (graphicNovelsData && Array.isArray(graphicNovelsData.graphicNovels)) ? graphicNovelsData.graphicNovels :
+                                  (graphicNovelsData && Array.isArray(graphicNovelsData.novels)) ? graphicNovelsData.novels :
+                                  (graphicNovelsData && Array.isArray(graphicNovelsData.items)) ? graphicNovelsData.items :
+                                  (graphicNovelsData && Array.isArray(graphicNovelsData.data)) ? graphicNovelsData.data : [];
+
+        const audiobooksArray = Array.isArray(audiobooksData) ? audiobooksData : 
+                               (audiobooksData && Array.isArray(audiobooksData.audiobooks)) ? audiobooksData.audiobooks :
+                               (audiobooksData && Array.isArray(audiobooksData.books)) ? audiobooksData.books :
+                               (audiobooksData && Array.isArray(audiobooksData.items)) ? audiobooksData.items :
+                               (audiobooksData && Array.isArray(audiobooksData.data)) ? audiobooksData.data : [];
+
+        console.log('Graphic novels array:', graphicNovelsArray);
+        console.log('Audiobooks array:', audiobooksArray);
+
+        // Debug: Log status values from first few items
+        if (graphicNovelsArray.length > 0) {
+          console.log('Sample graphic novel statuses:', graphicNovelsArray.slice(0, 3).map(item => ({ id: item._id || item.id, status: item.status })));
+        }
+        if (audiobooksArray.length > 0) {
+          console.log('Sample audiobook statuses:', audiobooksArray.slice(0, 3).map(item => ({ id: item._id || item.id, status: item.status })));
+        }
+
+        // Ensure we have arrays before mapping
+        if (!Array.isArray(graphicNovelsArray)) {
+          console.error('Graphic novels data is not an array:', graphicNovelsArray);
+        }
+        if (!Array.isArray(audiobooksArray)) {
+          console.error('Audiobooks data is not an array:', audiobooksArray);
+        }
+
+        const graphicNovels = (Array.isArray(graphicNovelsArray) ? graphicNovelsArray : []).map(item => ({
+          id: item._id || item.id,
+          title: item.title,
+          category: 'Graphic Novel',
+          submittedBy: item.role || 'Unknown',
+          approvedBy: 'Admin',
+          submittedAt: new Date(item.createdAt).toLocaleString(),
+          approvedAt: new Date(item.updatedAt).toLocaleString(),
+          isTrending: false,
+          type: 'graphic-novel',
+          status: item.status
+        }));
+
+        const audiobooks = (Array.isArray(audiobooksArray) ? audiobooksArray : []).map(item => ({
+          id: item._id || item.id,
+          title: item.title,
+          category: 'Audio Book',
+          submittedBy: item.role || 'Unknown',
+          approvedBy: 'Admin',
+          submittedAt: new Date(item.createdAt).toLocaleString(),
+          approvedAt: new Date(item.updatedAt).toLocaleString(),
+          isTrending: false,
+          type: 'audiobook',
+          status: item.status
+        }));
+
+        // Filter for published content only
+        const allApprovedContent = [...graphicNovels, ...audiobooks].filter(item => 
+          item.status === 'published'
+        );
+
+        console.log('All content before filtering:', [...graphicNovels, ...audiobooks]);
+        console.log('Filtered approved content:', allApprovedContent);
+        setApprovedContent(allApprovedContent);
+
+      } catch (err) {
+        console.error('Error fetching approved content:', err);
+        setError(err.response?.data?.message || 'Failed to fetch approved content');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApprovedContent();
+  }, []);
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
@@ -196,6 +287,43 @@ const ApprovedContent = () => {
       <MenuBookIcon fontSize="small" /> : 
       <HeadphonesIcon fontSize="small" />
   );
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Box sx={{ 
+        p: { xs: 1, sm: 2, md: 3 },
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '200px'
+      }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+        <StyledPaper>
+          <Box sx={{ 
+            textAlign: 'center', 
+            p: 3,
+            color: 'error.main'
+          }}>
+            <Typography variant="h6" gutterBottom>
+              Error Loading Content
+            </Typography>
+            <Typography variant="body2">
+              {error}
+            </Typography>
+          </Box>
+        </StyledPaper>
+      </Box>
+    );
+  }
 
   const MobileCard = ({ row }) => (
     <ContentCard>
@@ -274,92 +402,110 @@ const ApprovedContent = () => {
           </Typography>
         </HeaderSection>
 
-        {isMobile ? (
-          <Box sx={{ mt: 2 }}>
-            {sampleData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => (
-                <MobileCard key={row.id} row={row} />
-              ))}
+        {approvedContent.length === 0 ? (
+          <Box sx={{ 
+            textAlign: 'center', 
+            p: 4,
+            color: 'text.secondary'
+          }}>
+            <CheckCircleIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+            <Typography variant="h6" gutterBottom>
+              No Approved Content
+            </Typography>
+            <Typography variant="body2">
+              There are currently no approved items to display.
+            </Typography>
           </Box>
         ) : (
-          <StyledTableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeader>Title</TableHeader>
-                  <TableHeader>Category</TableHeader>
-                  <TableHeader>Submitted By</TableHeader>
-                  <TableHeader>Approved By</TableHeader>
-                  {!isTablet && (
-                    <>
-                      <TableHeader>Submitted At</TableHeader>
-                      <TableHeader>Approved At</TableHeader>
-                    </>
-                  )}
-                  <TableHeader align="right">Actions</TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sampleData
+          <>
+            {isMobile ? (
+              <Box sx={{ mt: 2 }}>
+                {approvedContent
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.title}</TableCell>
-                      <TableCell>
-                        <CategoryChip
-                          icon={getCategoryIcon(row.category)}
-                          label={row.category}
-                          category={row.category}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{row.submittedBy}</TableCell>
-                      <TableCell>{row.approvedBy}</TableCell>
+                    <MobileCard key={row.id} row={row} />
+                  ))}
+              </Box>
+            ) : (
+              <StyledTableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableHeader>Title</TableHeader>
+                      <TableHeader>Category</TableHeader>
+                      <TableHeader>Submitted By</TableHeader>
+                      <TableHeader>Approved By</TableHeader>
                       {!isTablet && (
                         <>
-                          <TableCell>{row.submittedAt}</TableCell>
-                          <TableCell>{row.approvedAt}</TableCell>
+                          <TableHeader>Submitted At</TableHeader>
+                          <TableHeader>Approved At</TableHeader>
                         </>
                       )}
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
-                          {row.isTrending && (
-                            <TrendingChip
-                              icon={<TrendingUpIcon />}
-                              label="Trending"
+                      <TableHeader align="right">Actions</TableHeader>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {approvedContent
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row) => (
+                        <TableRow key={row.id}>
+                          <TableCell>{row.title}</TableCell>
+                          <TableCell>
+                            <CategoryChip
+                              icon={getCategoryIcon(row.category)}
+                              label={row.category}
+                              category={row.category}
                               size="small"
                             />
+                          </TableCell>
+                          <TableCell>{row.submittedBy}</TableCell>
+                          <TableCell>{row.approvedBy}</TableCell>
+                          {!isTablet && (
+                            <>
+                              <TableCell>{row.submittedAt}</TableCell>
+                              <TableCell>{row.approvedAt}</TableCell>
+                            </>
                           )}
-                          <IconButton size="small" onClick={(e) => handleMenuOpen(e, row)}>
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </StyledTableContainer>
-        )}
+                          <TableCell align="right">
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
+                              {row.isTrending && (
+                                <TrendingChip
+                                  icon={<TrendingUpIcon />}
+                                  label="Trending"
+                                  size="small"
+                                />
+                              )}
+                              <IconButton size="small" onClick={(e) => handleMenuOpen(e, row)}>
+                                <MoreVertIcon />
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </StyledTableContainer>
+            )}
 
-        <TablePagination
-          component="div"
-          count={sampleData.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-          sx={{
-            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-              fontSize: { xs: '0.75rem', sm: '0.875rem' }
-            },
-            '.MuiTablePagination-select': {
-              fontSize: { xs: '0.75rem', sm: '0.875rem' }
-            }
-          }}
-        />
+            <TablePagination
+              component="div"
+              count={approvedContent.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25]}
+              sx={{
+                '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                },
+                '.MuiTablePagination-select': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }
+              }}
+            />
+          </>
+        )}
 
         <Menu
           anchorEl={anchorEl}

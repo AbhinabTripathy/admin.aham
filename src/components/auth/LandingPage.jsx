@@ -7,6 +7,8 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
+  Fade,
+  Zoom,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +28,12 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   width: '100%',
   maxWidth: '500px',
   margin: 'auto',
+  transform: 'translateY(0)',
+  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 12px 40px 0 rgba(31, 38, 135, 0.45)',
+  },
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(3),
     borderRadius: '10px',
@@ -39,6 +47,18 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 const Logo = styled('img')(({ theme }) => ({
   width: '200px',
   marginBottom: '30px',
+  animation: 'float 3s ease-in-out infinite',
+  '@keyframes float': {
+    '0%': {
+      transform: 'translateY(0px)',
+    },
+    '50%': {
+      transform: 'translateY(-10px)',
+    },
+    '100%': {
+      transform: 'translateY(0px)',
+    },
+  },
   [theme.breakpoints.down('sm')]: {
     width: '150px',
     marginBottom: '20px',
@@ -62,6 +82,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
   '&:hover': {
     background: 'linear-gradient(135deg, #2a5298 0%, #1e3c72 100%)',
+    transform: 'scale(1.05)',
   },
   [theme.breakpoints.down('sm')]: {
     width: '180px',
@@ -83,9 +104,13 @@ const StyledButton = styled(Button)(({ theme }) => ({
   justifyContent: 'center',
   '& .MuiSvgIcon-root': {
     fontSize: 'inherit',
+    transition: 'transform 0.3s ease-in-out',
     [theme.breakpoints.up('md')]: {
       fontSize: '1.3rem',
     },
+  },
+  '&:hover .MuiSvgIcon-root': {
+    transform: 'rotate(15deg)',
   },
 }));
 
@@ -108,6 +133,7 @@ const LandingPage = () => {
           sm: theme.spacing(3),
           md: theme.spacing(4),
         },
+        overflow: 'hidden',
       }}
     >
       <Container 
@@ -123,66 +149,81 @@ const LandingPage = () => {
           alignItems: 'center',
         }}
       >
-        <StyledPaper elevation={6}>
-          <Logo src={logo} alt="Logo" />
-          <Typography 
-            component="h1" 
-            variant={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'} 
-            gutterBottom 
-            align="center"
-            sx={{
-              fontWeight: 'bold',
-              mb: { xs: 1, sm: 2 },
-              fontSize: {
-                xs: '1.5rem',
-                sm: '2rem',
-                md: '2.5rem',
-              },
-            }}
-          >
-            Welcome to Aham
-          </Typography>
-          <Typography 
-            variant={isMobile ? 'body1' : 'h6'} 
-            gutterBottom 
-            align="center" 
-            sx={{ 
-              mb: { xs: 3, sm: 4 },
-              color: 'text.secondary',
-              fontSize: {
-                xs: '1rem',
-                sm: '1.1rem',
-                md: '1.25rem',
-              },
-            }}
-          >
-            Choose your login type
-          </Typography>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              width: '100%',
-              gap: { xs: 1, sm: 2 },
-            }}
-          >
-            <StyledButton
-              variant="contained"
-              onClick={() => navigate('/admin-login')}
-              startIcon={<AdminPanelSettingsIcon />}
+        <Zoom in={true} timeout={800}>
+          <StyledPaper elevation={6}>
+            <Logo src={logo} alt="Logo" />
+            <Fade in={true} timeout={1200}>
+              <Typography 
+                component="h1" 
+                variant={isMobile ? 'h5' : isTablet ? 'h4' : 'h3'} 
+                gutterBottom 
+                align="center"
+                sx={{
+                  fontWeight: 'bold',
+                  mb: { xs: 1, sm: 2 },
+                  fontSize: {
+                    xs: '1.5rem',
+                    sm: '2rem',
+                    md: '2.5rem',
+                  },
+                  background: 'linear-gradient(45deg, #1e3c72, #2a5298)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                Welcome to Aham
+              </Typography>
+            </Fade>
+            <Fade in={true} timeout={1500}>
+              <Typography 
+                variant={isMobile ? 'body1' : 'h6'} 
+                gutterBottom 
+                align="center" 
+                sx={{ 
+                  mb: { xs: 3, sm: 4 },
+                  color: 'text.secondary',
+                  fontSize: {
+                    xs: '1rem',
+                    sm: '1.1rem',
+                    md: '1.25rem',
+                  },
+                }}
+              >
+                Choose your Login Type
+              </Typography>
+            </Fade>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                width: '100%',
+                gap: { xs: 1, sm: 2 },
+              }}
             >
-              Admin Login
-            </StyledButton>
-            <StyledButton
-              variant="contained"
-              onClick={() => navigate('/creator-login')}
-              startIcon={<CreateIcon />}
-            >
-              Creator Login
-            </StyledButton>
-          </Box>
-        </StyledPaper>
+              <Fade in={true} timeout={1800}>
+                <StyledButton
+                  variant="contained"
+                  onClick={() => navigate('/creator-login')}
+                  startIcon={<CreateIcon />}
+                >
+                  Creator Login
+                </StyledButton>
+              </Fade>
+              <Fade in={true} timeout={2100}>
+                <StyledButton
+                  variant="contained"
+                  onClick={() => navigate('/admin-login')}
+                  startIcon={<AdminPanelSettingsIcon />}
+                >
+                  Admin Login
+                </StyledButton>
+              </Fade>
+            </Box>
+          </StyledPaper>
+        </Zoom>
       </Container>
     </Box>
   );

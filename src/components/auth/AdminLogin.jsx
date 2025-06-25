@@ -12,6 +12,9 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import logo from '../../assets/A Astro Logor.png';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -89,25 +92,68 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    
+    console.log('Login attempt started for username:', formData.username);
 
     try {
-      // Check for correct credentials
-      if (formData.username === 'AhamCore' && formData.password === 'Admin@123') {
+      // Make POST request to authenticate admin
+      console.log('Making API request to /api/admin/login');
+      const response = await axios.post('/api/admin/login', {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      console.log('API Response received:', response);
+      const data = response.data;
+      console.log('Response data:', data);
+
+      if (response.status === 200 && data.success && data.data && data.data.token) {
+        console.log('Login successful, token received:', data.data.token);
+        
+        // Store the token
+        localStorage.setItem('adminToken', data.data.token);
+        console.log('Token stored in localStorage');
+        
         // Store admin auth status
         localStorage.setItem('adminAuth', 'true');
+        console.log('Admin auth status stored in localStorage');
+        
         // Add user info if needed
         localStorage.setItem('adminUser', JSON.stringify({
           username: formData.username,
-          role: 'admin'
+          role: 'admin',
+          adminData: data.data.admin
         }));
-        // Redirect to admin dashboard
-        navigate('/admin-dashboard');
+        console.log('User info stored in localStorage');
+        
+        // Show success toast
+        console.log('Showing success toast');
+        toast.success('Admin login successful!', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Redirect to admin dashboard after a short delay
+        console.log('Redirecting to admin dashboard in 1.5 seconds');
+        setTimeout(() => {
+          console.log('Executing redirect to /admin-dashboard');
+          navigate('/admin-dashboard');
+        }, 1500);
       } else {
-        setError('Invalid credentials. Please try again.');
+        console.log('Login failed - Invalid response or no token');
+        setError(data.message || 'Invalid credentials. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Login error occurred:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
+      console.log('Login process completed, setting loading to false');
       setIsLoading(false);
     }
   };
@@ -239,6 +285,7 @@ const AdminLogin = () => {
           </FormContainer>
         </StyledPaper>
       </Container>
+      <ToastContainer />
     </Box>
   );
 };

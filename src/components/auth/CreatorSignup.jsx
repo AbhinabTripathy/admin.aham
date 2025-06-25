@@ -11,9 +11,12 @@ import {
   useMediaQuery,
   InputAdornment,
   IconButton,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
   Person as PersonIcon,
   Email as EmailIcon,
@@ -23,6 +26,8 @@ import {
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import logo from '../../assets/A Astro Logor.png';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const commonStyles = {
   borderRadius: '12px',
@@ -101,15 +106,20 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const CreatorSignup = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    mobile: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState({ password: false, confirm: false });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -122,7 +132,7 @@ const CreatorSignup = () => {
     const validations = {
       username: value => !value.trim() || value.length < 3 ? 'Username must be at least 3 characters' : '',
       email: value => !value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ? 'Invalid email format' : '',
-      mobile: value => !value.match(/^[0-9]{10}$/) ? 'Mobile number must be 10 digits' : '',
+      phoneNumber: value => !value.match(/^[0-9]{10}$/) ? 'Mobile number must be 10 digits' : '',
       password: value => !value || value.length < 6 ? 'Password must be at least 6 characters' : '',
       confirmPassword: value => value !== formData.password ? 'Passwords do not match' : '',
     };
@@ -136,10 +146,70 @@ const CreatorSignup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
+    console.log('Form Data:', formData);
+
     if (validateForm()) {
-      console.log('Form submitted:', formData);
+      console.log('Form validation passed');
+      setLoading(true);
+      try {
+        console.log('Making API call to:', 'https://api.ahamcore.com/api/creators/register');
+        console.log('Request payload:', {
+          username: formData.username,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
+        });
+
+        const response = await axios.post('https://api.ahamcore.com/api/creators/register', {
+          username: formData.username,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
+        });
+
+        console.log('API Response:', response);
+        console.log('Response status:', response.status);
+        console.log('Response data:', response.data);
+
+        // Store the token
+        localStorage.setItem('creatorToken', response.data.token);
+        console.log('Token stored in localStorage');
+        
+        // Show success message
+        setSnackbarMessage('Creator Registered Successfully');
+        setSnackbarSeverity('success');
+        setOpenSnackbar(true);
+
+        console.log('Redirecting to dashboard in 1.5 seconds...');
+        // Redirect after a short delay
+        setTimeout(() => {
+          navigate('/creator-dashboard');
+        }, 1500);
+
+      } catch (error) {
+        console.error('Registration Error:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
+        
+        // Handle error response
+        const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+        console.log('Showing error message:', errorMessage);
+        
+        setSnackbarMessage(errorMessage);
+        setSnackbarSeverity('error');
+        setOpenSnackbar(true);
+      } finally {
+        setLoading(false);
+        console.log('Form submission completed');
+      }
+    } else {
+      console.log('Form validation failed');
+      console.log('Validation errors:', errors);
     }
   };
 
@@ -158,7 +228,7 @@ const CreatorSignup = () => {
   const inputFields = [
     { name: 'username', label: 'Username', icon: <PersonIcon />, autoFocus: true },
     { name: 'email', label: 'Email Address', icon: <EmailIcon /> },
-    { name: 'mobile', label: 'Mobile Number', icon: <PhoneIcon /> },
+    { name: 'phoneNumber', label: 'Mobile Number', icon: <PhoneIcon /> },
     { name: 'password', label: 'Password', icon: <LockIcon />, type: 'password', endAdornment: true },
     { name: 'confirmPassword', label: 'Confirm Password', icon: <LockIcon />, type: 'password', endAdornment: true },
   ];
@@ -205,11 +275,36 @@ const CreatorSignup = () => {
                   startAdornment: <InputAdornment position="start">{field.icon}</InputAdornment>,
                   endAdornment: field.endAdornment && getPasswordEndAdornment(field.name),
                 }}
+                disabled={loading}
               />
             ))}
 
-            <StyledButton type="submit" fullWidth variant="contained">
-              Sign Up
+            <StyledButton 
+              type="submit" 
+              fullWidth 
+              variant="contained"
+              disabled={loading}
+              sx={{
+                opacity: loading ? 0.7 : 1,
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  top: 0,
+                  left: 0,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  animation: loading ? 'pulse 1.5s infinite' : 'none',
+                },
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.7 },
+                  '100%': { opacity: 1 },
+                },
+              }}
+            >
+              {loading ? 'Signing Up...' : 'Sign Up'}
             </StyledButton>
 
             <Typography variant="body2" align="center" sx={{ color: '#64748b' }}>
@@ -226,6 +321,33 @@ const CreatorSignup = () => {
           </Box>
         </StyledPaper>
       </Container>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setOpenSnackbar(false)} 
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </Box>
   );
 };

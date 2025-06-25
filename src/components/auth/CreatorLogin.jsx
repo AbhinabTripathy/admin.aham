@@ -12,7 +12,10 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import logo from '../../assets/A Astro Logor.png';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -83,33 +86,91 @@ const CreatorLogin = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const navigate = useNavigate();
-  const [error, setError] = useState('');
-
+  
   const [formData, setFormData] = useState({
-    mobileNumber: '',
+    mobileNo: '',
     password: '',
   });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
     setError(''); // Clear error when user types
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check for specific credentials
-    if (formData.mobileNumber === '9988776655' && formData.password === 'Testing12#$') {
-      // Set authentication token
-      localStorage.setItem('creatorAuth', 'true');
-      // Successful login
-      navigate('/creator-dashboard'); // Redirect to creator dashboard
-    } else {
-      // Failed login
-      setError('Invalid mobile number or password');
+    setLoading(true);
+
+    try {
+      console.log("Attempting login with data:", formData);
+      const response = await axios.post(
+        "https://api.ahamcore.com/api/creators/login",
+        formData
+      );
+      console.log("Login response:", response.data);
+
+      // Check if we have data and token in the nested structure
+      if (response.data.data && response.data.data.token) {
+        // Store the token from the nested data object
+        const token = response.data.data.token;
+        
+        // Clear any existing auth data
+        localStorage.removeItem('creatorToken');
+        localStorage.removeItem('creatorAuth');
+        localStorage.removeItem('creatorUser');
+        
+        // Store new auth data
+        localStorage.setItem('creatorToken', token);
+        localStorage.setItem('creatorAuth', 'true');
+        
+        // Store user data if available
+        if (response.data.data.user) {
+          localStorage.setItem('creatorUser', JSON.stringify(response.data.data.user));
+        }
+        
+        // Log auth data storage
+        console.log('Auth data stored successfully:', {
+          token: {
+            length: token.length,
+            preview: `${token.substring(0, 10)}...${token.substring(token.length - 10)}`
+          },
+          auth: localStorage.getItem('creatorAuth'),
+          user: localStorage.getItem('creatorUser'),
+          timestamp: new Date().toISOString()
+        });
+
+        toast.success("Login successful!");
+        
+        // Navigate to creator dashboard
+        console.log('Navigating to creator dashboard...');
+        setTimeout(() => {
+          navigate("/creator-dashboard");
+        }, 1000);
+      } else {
+        console.error('Login Error: Invalid response structure', response.data);
+        toast.error("Login failed: Invalid server response");
+      }
+    } catch (error) {
+      console.error("Login Error:", {
+        message: error.message,
+        response: {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
+        }
+      });
+      
+      const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -179,12 +240,12 @@ const CreatorLogin = () => {
             <StyledTextField
               required
               fullWidth
-              id="mobileNumber"
+              id="mobileNo"
               label="Mobile Number"
-              name="mobileNumber"
+              name="mobileNo"
               autoComplete="tel"
               autoFocus
-              value={formData.mobileNumber}
+              value={formData.mobileNo}
               onChange={handleChange}
               type="tel"
               inputProps={{
@@ -193,6 +254,7 @@ const CreatorLogin = () => {
               }}
               placeholder="Enter 10 digit mobile number"
               error={!!error}
+              disabled={loading}
             />
             <StyledTextField
               required
@@ -205,11 +267,13 @@ const CreatorLogin = () => {
               value={formData.password}
               onChange={handleChange}
               error={!!error}
+              disabled={loading}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
+              disabled={loading}
               sx={{
                 mt: { xs: 2, sm: 3 },
                 mb: { xs: 2, sm: 3 },
@@ -227,9 +291,26 @@ const CreatorLogin = () => {
                 textTransform: 'none',
                 fontWeight: 600,
                 transition: 'all 0.3s ease-in-out',
+                opacity: loading ? 0.7 : 1,
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  top: 0,
+                  left: 0,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  animation: loading ? 'pulse 1.5s infinite' : 'none',
+                },
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.7 },
+                  '100%': { opacity: 1 },
+                },
               }}
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
             <Box 
               sx={{ 
@@ -270,6 +351,18 @@ const CreatorLogin = () => {
           </FormContainer>
         </StyledPaper>
       </Container>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </Box>
   );
 };
