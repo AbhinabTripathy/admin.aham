@@ -172,7 +172,7 @@ const CreaterHeader = ({ onMenuClick }) => {
                 transition: 'all 0.3s ease',
               }}
             >
-              Creater Dashboard
+              Creator Dashboard
             </Typography>
           </LogoContainer>
         </Box>

@@ -96,9 +96,9 @@ const AdminLogin = () => {
     console.log('Login attempt started for username:', formData.username);
 
     try {
-      // Make POST request to authenticate admin
-      console.log('Making API request to /api/admin/login');
-      const response = await axios.post('/api/admin/login', {
+      // Make POST request to authenticate admin with the correct API endpoint
+      console.log('Making API request to https://api.ahamcore.com/api/admin/login');
+      const response = await axios.post('https://api.ahamcore.com/api/admin/login', {
         username: formData.username,
         password: formData.password,
       });
@@ -145,13 +145,26 @@ const AdminLogin = () => {
         }, 1500);
       } else {
         console.log('Login failed - Invalid response or no token');
-        setError(data.message || 'Invalid credentials. Please try again.');
+        throw new Error(data.message || 'Invalid credentials. Please try again.');
       }
     } catch (err) {
       console.error('Login error occurred:', err);
       console.error('Error response:', err.response);
       console.error('Error message:', err.message);
-      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+      
+      let errorMessage;
+      if (err.response?.status === 404) {
+        errorMessage = 'Server not found. Please check your connection.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Invalid credentials. Please try again.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else {
+        errorMessage = 'An error occurred. Please try again.';
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       console.log('Login process completed, setting loading to false');
       setIsLoading(false);
