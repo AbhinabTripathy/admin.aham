@@ -397,44 +397,19 @@ const GraphicNovel = () => {
         return;
       }
 
-      // First upload the file
-      const fileFormData = new FormData();
-      fileFormData.append('file', novelIcon);
+      const formData = new FormData();
+      formData.append('title', title.trim());
+      formData.append('thumbnail', novelIcon, 'novel-icon-' + Date.now() + '.jpeg');
 
       const finalToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
 
-      // First, upload the file
-      const uploadResponse = await axios.post(
-        'https://api.ahamcore.com/api/upload',
-        fileFormData,
+      const response = await axios.post(
+        'https://api.ahamcore.com/api/graphic-novels',
+        formData,
         {
           headers: {
             'Authorization': finalToken,
             'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          }
-        }
-      );
-
-      if (!uploadResponse.data || !uploadResponse.data.path) {
-        throw new Error('Failed to get file path from upload');
-      }
-
-      const filePath = uploadResponse.data.path;
-
-      // Now create the graphic novel with the file path
-      const novelData = {
-        title: title.trim(),
-        novelIcon: filePath
-      };
-
-      const response = await axios.post(
-        'https://api.ahamcore.com/api/graphic-novels',
-        novelData,
-        {
-          headers: {
-            'Authorization': finalToken,
-            'Content-Type': 'application/json',
             'Accept': 'application/json'
           }
         }
@@ -601,7 +576,7 @@ const GraphicNovel = () => {
                       }
                     }}
                   >
-                    {novelIcon ? 'Uploaded' : 'Upload'}
+                    {novelIcon ? 'Uploaded' : 'Upload Novel Thumbnail'}
                   </Button>
                 </AnimatedButton>
               </label>
