@@ -341,7 +341,7 @@ const CreatorLogin = () => {
                 Don't have an account?{' '}
                 <Link 
                   component={RouterLink} 
-                  to="/signup" 
+                  to="/creator-signup" 
                   variant="body2"
                 >
                   Register here
