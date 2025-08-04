@@ -7,6 +7,7 @@ import CreaterFooter from './CreaterFooter';
 import Overview from './Overview';
 import GraphicNovel from './GraphicNovel';
 import Audiobook from './Audiobook';
+import WriteBlog from './WriteBlog';
 import ApprovedContent from './ApprovedContent';
 import PendingReview from './PendingReview';
 import RejectedContent from './RejectedContent';
@@ -172,6 +173,8 @@ const CreaterDashboard = () => {
         return <GraphicNovel />;
       case '/creator-dashboard/create-content/audio-book':
         return <Audiobook />;
+      case '/creator-dashboard/create-content/write-blog':
+        return <WriteBlog />;
       case '/creator-dashboard/all-content':
         return <ApprovedContent />;
       case '/creator-dashboard/pending':

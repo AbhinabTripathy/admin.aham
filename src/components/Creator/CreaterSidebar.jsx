@@ -8,6 +8,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import BlockIcon from '@mui/icons-material/Block';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
+import CreateIcon from '@mui/icons-material/Create';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { Drawer } from '@mui/material';
@@ -167,6 +168,11 @@ const CreaterSidebar = ({ open, onClose, variant = 'permanent' }) => {
                 "Create Audio Book",
                 '/creator-dashboard/create-content/audio-book'
               )}
+              {renderSubMenuItem(
+                <CreateIcon />,
+                "Write Blog",
+                '/creator-dashboard/create-content/write-blog'
+              )}
             </Collapse>
           </CollapsibleMenu>
         )}
@@ -222,6 +228,17 @@ const CreaterSidebar = ({ open, onClose, variant = 'permanent' }) => {
               </IconWrapper>
             </MenuItem>
           </Tooltip>
+          <Tooltip title="Write Blog" placement="right">
+            <MenuItem 
+              active={location.pathname === '/creator-dashboard/create-content/write-blog'}
+              onClick={() => handleNavigation('/creator-dashboard/create-content/write-blog')}
+              isCollapsed={isCollapsed}
+            >
+              <IconWrapper isCollapsed={isCollapsed}>
+                <CreateIcon />
+              </IconWrapper>
+            </MenuItem>
+          </Tooltip>
         </>
       ) : (
         <>
@@ -245,6 +262,11 @@ const CreaterSidebar = ({ open, onClose, variant = 'permanent' }) => {
               <HeadphonesIcon />,
               "Create Audio Book",
               '/creator-dashboard/create-content/audio-book'
+            )}
+            {renderSubMenuItem(
+              <CreateIcon />,
+              "Write Blog",
+              '/creator-dashboard/create-content/write-blog'
             )}
           </Collapse>
         </>
