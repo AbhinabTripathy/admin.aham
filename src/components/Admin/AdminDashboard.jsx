@@ -16,6 +16,7 @@ import Users from './Users';
 import SubscribedUsers from './SubscribedUsers';
 import PostBanner from './PostBanner';
 import Products from './Products';
+import WriteBlog from './WriteBlog';
 import { useLocation } from 'react-router-dom';
 
 const DashboardContainer = styled(Box)(({ theme }) => ({
@@ -196,6 +197,8 @@ const AdminDashboard = () => {
         return <SubscribedUsers />;
       case '/admin-dashboard/post-banners':
         return <PostBanner />;
+      case '/admin-dashboard/write-blog':
+        return <WriteBlog />;
       default:
         return <Overview />;
     }

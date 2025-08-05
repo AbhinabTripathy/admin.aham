@@ -18,6 +18,7 @@ import HeadphonesIcon from '@mui/icons-material/Headphones';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CreateIcon from '@mui/icons-material/Create';
 import { Drawer } from '@mui/material';
 
 const SidebarContainer = styled(Box)(({ theme, isCollapsed }) => ({
@@ -165,6 +166,7 @@ const AdminSidebar = ({ open, onClose, variant = 'permanent' }) => {
         {renderSubMenuItem(<AutoStoriesIcon />, "Graphic Novel", '/admin-dashboard/graphic-novel')}
         {renderSubMenuItem(<HeadphonesIcon />, "Audio Book", '/admin-dashboard/audio-book')}
         {renderSubMenuItem(<StorefrontIcon />, "Mall", '/admin-dashboard/mall')}
+        {renderSubMenuItem(<CreateIcon />, "Write Blog", '/admin-dashboard/write-blog')}
       </Collapse>
 
       {/* All Content */}
